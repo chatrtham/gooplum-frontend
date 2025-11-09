@@ -5,7 +5,7 @@ import {
 } from "@assistant-ui/react-langgraph";
 
 const createClient = () => {
-  const apiUrl = process.env["NEXT_PUBLIC_LANGGRAPH_API_URL"]!;
+  const apiUrl = process.env["NEXT_PUBLIC_API_BASE_URL"]!;
   return new Client({
     apiUrl,
   });

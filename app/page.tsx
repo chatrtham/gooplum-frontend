@@ -1,9 +1,9 @@
-import { MyAssistant } from "@/components/MyAssistant";
+import { FlowList } from "@/components/flows/FlowList";
 
 export default function Home() {
   return (
-    <main className="h-dvh">
-      <MyAssistant />
+    <main className="container mx-auto px-4 py-8">
+      <FlowList />
     </main>
   );
 }
