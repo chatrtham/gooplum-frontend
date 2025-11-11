@@ -1,9 +1,5 @@
-import { MyAssistant } from "@/components/MyAssistant";
+import { FlowsListPage } from "@/components/flows/FlowsListPage";
 
 export default function Home() {
-  return (
-    <main className="h-dvh">
-      <MyAssistant />
-    </main>
-  );
+  return <FlowsListPage />;
 }
