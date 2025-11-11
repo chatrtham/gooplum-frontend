@@ -1,52 +1,42 @@
 "use client";
 
-import { useState } from "react";
-import { PlusIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { PlusIcon, RefreshCwIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FlowCard, Flow } from "./FlowCard";
 import { motion, AnimatePresence } from "motion/react";
-
-const mockFlows: Flow[] = [
-  {
-    id: "1",
-    name: "Send Daily Sales Report",
-    description: "Generates and emails daily sales reports to the team",
-    createdAt: "2 days ago",
-    lastExecuted: "Yesterday at 9:00 AM",
-  },
-  {
-    id: "2",
-    name: "Sync Customer Data to CRM",
-    description: "Automatically syncs customer data with the CRM system",
-    createdAt: "1 week ago",
-    lastExecuted: "3 days ago",
-  },
-  {
-    id: "3",
-    name: "Generate Weekly Stats",
-    description: "Creates comprehensive weekly statistics and analytics",
-    createdAt: "3 days ago",
-    lastExecuted: "Last week",
-  },
-  {
-    id: "4",
-    name: "Backup Database",
-    description: "Performs automated database backups with verification",
-    createdAt: "5 days ago",
-    lastExecuted: "2 days ago",
-  },
-  {
-    id: "5",
-    name: "Process Email Attachments",
-    description: "Downloads and processes attachments from incoming emails",
-    createdAt: "1 day ago",
-    lastExecuted: "This morning",
-  },
-];
+import { flowsAPI } from "@/lib/flowsApi";
 
 export function FlowsListPage() {
-  const [flows] = useState<Flow[]>(mockFlows);
+  const [flows, setFlows] = useState<Flow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch flows from the API
+  const fetchFlows = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const fetchedFlows = await flowsAPI.getFlows();
+      setFlows(fetchedFlows);
+    } catch (err) {
+      console.error("Failed to fetch flows:", err);
+      setError(err instanceof Error ? err.message : "Failed to load flows");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch and auto-refresh every 30 seconds
+  useEffect(() => {
+    fetchFlows();
+
+    // Set up auto-refresh
+    const interval = setInterval(fetchFlows, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -89,18 +79,41 @@ export function FlowsListPage() {
           >
             <h1 className="text-xl font-semibold text-foreground">GoopLum</h1>
 
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link href="/chat">
+            <div className="flex items-center gap-2">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Button
-                  variant="default"
+                  variant="outline"
                   size="sm"
-                  className="flex items-center gap-2 bg-primary text-primary-foreground shadow-xs hover:bg-primary/90"
+                  onClick={fetchFlows}
+                  disabled={loading}
+                  className="flex items-center gap-2 border-border bg-card text-foreground shadow-xs hover:bg-accent"
                 >
-                  <PlusIcon className="size-4" />
-                  Create New Flow
+                  <RefreshCwIcon
+                    className={`size-4 ${loading ? "animate-spin" : ""}`}
+                  />
+                  Refresh
                 </Button>
-              </Link>
-            </motion.div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link href="/chat">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="flex items-center gap-2 bg-primary text-primary-foreground shadow-xs hover:bg-primary/90"
+                  >
+                    <PlusIcon className="size-4" />
+                    Create New Flow
+                  </Button>
+                </Link>
+              </motion.div>
+            </div>
           </motion.div>
         </div>
       </header>
@@ -124,28 +137,72 @@ export function FlowsListPage() {
           </div>
         </motion.div>
 
+        {/* Loading State */}
+        {loading && (
+          <motion.div
+            className="flex flex-col items-center justify-center py-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <RefreshCwIcon className="mb-4 size-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading flows...</p>
+          </motion.div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <motion.div
+            className="rounded-lg border border-destructive/20 bg-destructive/10 p-6"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <div className="flex items-start gap-3">
+              <div className="text-destructive">
+                <PlusIcon className="size-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-destructive">
+                  Failed to load flows
+                </h3>
+                <p className="mt-1 text-sm text-destructive/80">{error}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={fetchFlows}
+                  className="mt-3 border-destructive/20 text-destructive hover:bg-destructive/10"
+                >
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Flows Grid */}
-        <motion.div
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <AnimatePresence>
-            {flows.map((flow) => (
-              <motion.div
-                key={flow.id}
-                variants={itemVariants}
-                layoutId={`flow-${flow.id}`}
-              >
-                <FlowCard flow={flow} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+        {!loading && !error && (
+          <motion.div
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <AnimatePresence>
+              {flows.map((flow) => (
+                <motion.div
+                  key={flow.id}
+                  variants={itemVariants}
+                  layoutId={`flow-${flow.id}`}
+                >
+                  <FlowCard flow={flow} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
 
         {/* Empty State (if no flows) */}
-        {flows.length === 0 && (
+        {!loading && !error && flows.length === 0 && (
           <motion.div
             className="py-12 text-center"
             initial={{ opacity: 0, scale: 0.9 }}

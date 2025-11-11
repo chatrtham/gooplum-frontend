@@ -9,142 +9,165 @@ import {
   PlayIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  RefreshCwIcon,
+  AlertCircleIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { flowsAPI, FlowSchema, ExecutionResponse } from "@/lib/flowsApi";
+import MarkdownPreview from "@uiw/react-markdown-preview";
+import "./markdown.css";
 
-interface FlowDetails {
-  id: string;
-  name: string;
-  description: string;
-  lastExecuted?: string;
-  inputs: FlowInput[];
-  explanation: string;
+interface FlowExecutionState {
+  isExecuting: boolean;
+  result: ExecutionResponse | null;
+  error: string | null;
 }
-
-interface FlowInput {
-  id: string;
-  name: string;
-  label: string;
-  type: "text" | "email" | "date" | "checkbox";
-  placeholder?: string;
-  defaultValue?: string | boolean;
-  required?: boolean;
-}
-
-const mockFlowDetails: Record<string, FlowDetails> = {
-  "1": {
-    id: "1",
-    name: "Send Daily Sales Report",
-    description: "Daily Sales Report Flow",
-    lastExecuted: "Yesterday at 9:00 AM",
-    inputs: [
-      {
-        id: "email_recipients",
-        name: "email_recipients",
-        label: "Email Recipients",
-        type: "email",
-        placeholder: "team@company.com, manager@company.com",
-        defaultValue: "team@company.com, manager@company.com",
-        required: true,
-      },
-      {
-        id: "report_date",
-        name: "report_date",
-        label: "Report Date",
-        type: "date",
-        defaultValue: new Date().toISOString().split("T")[0],
-        required: true,
-      },
-      {
-        id: "include_charts",
-        name: "include_charts",
-        label: "Include Charts",
-        type: "checkbox",
-        defaultValue: true,
-      },
-      {
-        id: "include_raw_data",
-        name: "include_raw_data",
-        label: "Include Raw Data",
-        type: "checkbox",
-        defaultValue: false,
-      },
-    ],
-    explanation: `# Daily Sales Report Flow
-
-This automated flow generates comprehensive sales reports and delivers them to your team every morning.
-
-## Process
-1. **Data Collection** - Queries the sales database for yesterday's transactions, customer acquisitions, and revenue metrics
-2. **Report Generation** - Creates a PDF with charts showing:
-   - Total sales by product category
-   - New customer acquisition trends
-   - Revenue comparison with previous week
-3. **Email Delivery** - Sends the report to specified recipients at 9:00 AM daily
-
-## Integrations Used
-- PostgreSQL Database (for sales data)
-- PDF Generation Service
-- SMTP Email Service
-
-Last executed: Yesterday at 9:00 AM`,
-  },
-};
 
 export default function FlowDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const flowId = params.id as string;
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
-  const [formData, setFormData] = useState<Record<string, string | boolean>>(
-    {},
-  );
+  const [flowSchema, setFlowSchema] = useState<FlowSchema | null>(null);
+  const [explanation, setExplanation] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [executionState, setExecutionState] = useState<FlowExecutionState>({
+    isExecuting: false,
+    result: null,
+    error: null,
+  });
 
-  const flow = mockFlowDetails[flowId];
+  // Fetch flow data from API
+  const fetchFlowData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  // Initialize form data with default values - always call hook at top level
-  useEffect(() => {
-    if (flow) {
-      const initialData: Record<string, string | boolean> = {};
-      flow.inputs.forEach((input) => {
-        initialData[input.name] = input.defaultValue || "";
-      });
+      // Fetch flow schema and explanation in parallel
+      const [schemaData, explanationData] = await Promise.all([
+        flowsAPI.getFlowSchema(flowId),
+        flowsAPI
+          .getFlowExplanation(flowId)
+          .catch(() => ({
+            explanation: "No explanation available for this flow.",
+          })),
+      ]);
+
+      setFlowSchema(schemaData);
+      setExplanation(explanationData.explanation);
+
+      // Initialize form data with default values from schema
+      const initialData: Record<string, any> = {};
+      Object.entries(schemaData.parameters.properties).forEach(
+        ([paramName, paramSchema]) => {
+          initialData[paramName] =
+            paramSchema.default !== undefined
+              ? paramSchema.default
+              : paramSchema.type === "boolean"
+                ? false
+                : "";
+        },
+      );
       setFormData(initialData);
+    } catch (err) {
+      console.error("Failed to fetch flow data:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to load flow details",
+      );
+    } finally {
+      setLoading(false);
     }
-  }, [flow]);
+  };
 
-  if (!flow) {
+  useEffect(() => {
+    fetchFlowData();
+  }, [flowId]);
+
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="mb-4 text-2xl font-semibold">Flow Not Found</h1>
-          <Link href="/">
-            <Button>Back to Flows</Button>
-          </Link>
+        <div className="flex flex-col items-center gap-4">
+          <RefreshCwIcon className="size-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading flow details...</p>
         </div>
       </div>
     );
   }
 
-  const handleInputChange = (name: string, value: string | boolean) => {
+  if (error || !flowSchema) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="max-w-md text-center">
+          <AlertCircleIcon className="mx-auto mb-4 size-12 text-destructive" />
+          <h1 className="mb-2 text-2xl font-semibold">Failed to Load Flow</h1>
+          <p className="mb-4 text-muted-foreground">
+            {error || "Flow not found"}
+          </p>
+          <div className="flex justify-center gap-2">
+            <Button onClick={fetchFlowData} variant="outline">
+              Try Again
+            </Button>
+            <Link href="/">
+              <Button>Back to Flows</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleInputChange = (name: string, value: any) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleRunFlow = () => {
-    // TODO: Implement flow execution
-    console.log("Running flow with data:", formData);
-    alert("Flow execution would be triggered here");
+  const handleRunFlow = async () => {
+    try {
+      setExecutionState({ isExecuting: true, result: null, error: null });
+
+      // Validate parameters first
+      const validation = await flowsAPI.validateFlow(flowId, formData);
+      if (!validation.is_valid) {
+        setExecutionState({
+          isExecuting: false,
+          result: null,
+          error: `Validation failed: ${validation.errors.join(", ")}`,
+        });
+        return;
+      }
+
+      // Execute the flow
+      const result = await flowsAPI.executeFlow(flowId, formData);
+
+      setExecutionState({
+        isExecuting: false,
+        result,
+        error: result.success ? null : result.error || "Unknown error",
+      });
+    } catch (err) {
+      setExecutionState({
+        isExecuting: false,
+        result: null,
+        error: err instanceof Error ? err.message : "Failed to execute flow",
+      });
+    }
   };
 
-  const handleDelete = () => {
-    // TODO: Implement flow deletion
+  const handleDelete = async () => {
     if (confirm("Are you sure you want to delete this flow?")) {
-      console.log("Deleting flow:", flowId);
-      router.push("/");
+      try {
+        await flowsAPI.deleteFlow(flowId);
+        router.push("/");
+      } catch (err) {
+        alert(
+          `Failed to delete flow: ${err instanceof Error ? err.message : "Unknown error"}`,
+        );
+      }
     }
   };
 
@@ -161,7 +184,7 @@ export default function FlowDetailsPage() {
                 </Button>
               </Link>
               <h1 className="text-xl font-semibold text-foreground">
-                {flow.name}
+                {flowSchema.name}
               </h1>
             </div>
 
@@ -189,63 +212,177 @@ export default function FlowDetailsPage() {
               <h2 className="text-lg font-semibold text-foreground">
                 Run Flow
               </h2>
+              {flowSchema.description && (
+                <p className="text-sm text-muted-foreground">
+                  {flowSchema.description}
+                </p>
+              )}
             </div>
 
             {/* Dynamic Input Fields */}
             <div className="space-y-4">
-              {flow.inputs.map((input) => (
-                <div key={input.id} className="space-y-2">
-                  <Label
-                    htmlFor={input.id}
-                    className="text-sm font-medium text-foreground"
-                  >
-                    {input.label}
-                    {input.required && (
-                      <span className="ml-1 text-destructive">*</span>
-                    )}
-                  </Label>
+              {Object.entries(flowSchema.parameters.properties).map(
+                ([paramName, paramSchema]) => {
+                  const isRequired =
+                    flowSchema.parameters.required.includes(paramName);
 
-                  {input.type === "checkbox" ? (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={input.id}
-                        checked={Boolean(formData[input.name])}
-                        onCheckedChange={(checked) =>
-                          handleInputChange(input.name, checked)
-                        }
-                      />
+                  return (
+                    <div key={paramName} className="space-y-2">
                       <Label
-                        htmlFor={input.id}
-                        className="text-sm text-muted-foreground"
+                        htmlFor={paramName}
+                        className="text-sm font-medium text-foreground"
                       >
-                        Enable this option
+                        {paramName}
+                        {isRequired && (
+                          <span className="ml-1 text-destructive">*</span>
+                        )}
                       </Label>
+
+                      {paramSchema.description && (
+                        <p className="text-xs text-muted-foreground">
+                          {paramSchema.description}
+                        </p>
+                      )}
+
+                      {paramSchema.type === "boolean" ? (
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={paramName}
+                            checked={Boolean(formData[paramName])}
+                            onCheckedChange={(checked) =>
+                              handleInputChange(paramName, checked)
+                            }
+                          />
+                          <Label
+                            htmlFor={paramName}
+                            className="text-sm text-muted-foreground"
+                          >
+                            {paramSchema.description || "Enable this option"}
+                          </Label>
+                        </div>
+                      ) : paramSchema.type === "integer" ||
+                        paramSchema.type === "number" ? (
+                        <Input
+                          id={paramName}
+                          type="number"
+                          placeholder={
+                            paramSchema.description || `Enter ${paramName}`
+                          }
+                          value={
+                            formData[paramName] ?? paramSchema.default ?? ""
+                          }
+                          onChange={(e) =>
+                            handleInputChange(
+                              paramName,
+                              paramSchema.type === "integer"
+                                ? parseInt(e.target.value) || 0
+                                : parseFloat(e.target.value) || 0,
+                            )
+                          }
+                          className="border-border bg-background"
+                        />
+                      ) : paramSchema.type === "object" ||
+                        paramSchema.type === "array" ? (
+                        <textarea
+                          id={paramName}
+                          placeholder={
+                            paramSchema.description ||
+                            `Enter ${paramName} as JSON`
+                          }
+                          value={JSON.stringify(
+                            formData[paramName] || paramSchema.default || {},
+                            null,
+                            2,
+                          )}
+                          onChange={(e) => {
+                            try {
+                              const parsed = JSON.parse(e.target.value);
+                              handleInputChange(paramName, parsed);
+                            } catch (e) {
+                              // Invalid JSON, ignore
+                            }
+                          }}
+                          className="h-24 w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm"
+                        />
+                      ) : (
+                        <Input
+                          id={paramName}
+                          type="text"
+                          placeholder={
+                            paramSchema.description || `Enter ${paramName}`
+                          }
+                          value={
+                            formData[paramName] ?? paramSchema.default ?? ""
+                          }
+                          onChange={(e) =>
+                            handleInputChange(paramName, e.target.value)
+                          }
+                          className="border-border bg-background"
+                        />
+                      )}
                     </div>
-                  ) : (
-                    <Input
-                      id={input.id}
-                      type={input.type}
-                      placeholder={input.placeholder}
-                      value={(formData[input.name] as string) || ""}
-                      onChange={(e) =>
-                        handleInputChange(input.name, e.target.value)
-                      }
-                      className="border-border bg-background"
-                    />
-                  )}
-                </div>
-              ))}
+                  );
+                },
+              )}
             </div>
+
+            {/* Execution Result/Error Display */}
+            {executionState.error && (
+              <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircleIcon className="mt-0.5 size-5 text-destructive" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-destructive">
+                      Execution Failed
+                    </h4>
+                    <p className="mt-1 text-sm text-destructive/80">
+                      {executionState.error}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {executionState.result && (
+              <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-4">
+                <h4 className="mb-2 font-semibold text-green-700">
+                  Execution Successful
+                </h4>
+                <p className="mb-2 text-sm text-green-600">
+                  Executed in {executionState.result.execution_time.toFixed(2)}s
+                </p>
+                {executionState.result.data && (
+                  <div className="mt-3">
+                    <h5 className="mb-1 text-sm font-medium text-green-700">
+                      Result:
+                    </h5>
+                    <pre className="overflow-x-auto rounded border border-green-500/20 bg-white/50 p-2 text-xs">
+                      {JSON.stringify(executionState.result.data, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Run Button */}
             <div className="flex justify-end">
               <Button
                 onClick={handleRunFlow}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={executionState.isExecuting}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 size="lg"
               >
-                <PlayIcon className="mr-2 size-4" />
-                Run Flow
+                {executionState.isExecuting ? (
+                  <>
+                    <RefreshCwIcon className="mr-2 size-4 animate-spin" />
+                    Executing...
+                  </>
+                ) : (
+                  <>
+                    <PlayIcon className="mr-2 size-4" />
+                    Run Flow
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -271,33 +408,13 @@ export default function FlowDetailsPage() {
 
           {isDetailsExpanded && (
             <div className="border-t border-border px-6 pb-6">
-              <div className="prose prose-sm mt-4 max-w-none text-foreground">
-                {/* Simple markdown rendering for the explanation */}
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: flow.explanation
-                      .replace(
-                        /^# (.*$)/gm,
-                        '<h1 class="text-xl font-semibold mb-3">$1</h1>',
-                      )
-                      .replace(
-                        /^## (.*$)/gm,
-                        '<h2 class="text-lg font-medium mb-2 mt-4">$1</h2>',
-                      )
-                      .replace(/^\- (.*$)/gm, '<li class="ml-4">$1</li>')
-                      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                      .replace(/\n\n/g, '</p><p class="mb-4">')
-                      .replace(/^/, '<p class="mb-4">')
-                      .replace(/$/, "</p>"),
-                  }}
+              <div className="mt-4 text-foreground">
+                <MarkdownPreview
+                  source={explanation}
+                  className="markdown-custom"
+                  data-color-mode="auto"
                 />
               </div>
-            </div>
-          )}
-
-          {!isDetailsExpanded && (
-            <div className="px-6 pb-4 text-sm text-muted-foreground">
-              Click to see detailed explanation...
             </div>
           )}
         </Card>
