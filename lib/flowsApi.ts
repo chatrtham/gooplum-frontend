@@ -4,11 +4,14 @@ const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:2024";
 
 export interface FlowInfo {
+  id: string;
   name: string;
   description: string;
   parameter_count: number;
   required_parameters: number;
   return_type: string;
+  created_at?: string; // ISO timestamp
+  last_executed?: string; // ISO timestamp
 }
 
 export interface Flow {
@@ -20,6 +23,7 @@ export interface Flow {
 }
 
 export interface FlowSchema {
+  id: string;
   name: string;
   description: string;
   parameters: {
@@ -35,6 +39,8 @@ export interface FlowSchema {
     required: string[];
   };
   return_type: string;
+  created_at?: string; // ISO timestamp
+  last_executed?: string; // ISO timestamp
 }
 
 export interface FlowExecutionRequest {
@@ -66,11 +72,15 @@ export interface CompilationResponse {
 
 // Transform FlowInfo from API to our Flow interface
 const transformFlowInfo = (flowInfo: FlowInfo): Flow => ({
-  id: flowInfo.name,
+  id: flowInfo.id,
   name: flowInfo.name,
   description: flowInfo.description,
-  createdAt: "Recently", // The API doesn't provide creation time, we'll use a placeholder
-  lastExecuted: undefined, // The API doesn't provide last execution time
+  createdAt: flowInfo.created_at
+    ? new Date(flowInfo.created_at).toLocaleDateString()
+    : "Recently",
+  lastExecuted: flowInfo.last_executed
+    ? new Date(flowInfo.last_executed).toLocaleDateString()
+    : undefined,
 });
 
 class FlowsAPI {
@@ -109,17 +119,17 @@ class FlowsAPI {
   }
 
   // Get detailed schema for a specific flow
-  async getFlowSchema(flowName: string): Promise<FlowSchema> {
-    const response = await fetch(`${BASE_URL}/flows/${flowName}`);
+  async getFlowSchema(flowId: string): Promise<FlowSchema> {
+    const response = await fetch(`${BASE_URL}/flows/${flowId}`);
     return this.handleResponse<FlowSchema>(response);
   }
 
   // Validate flow parameters without executing
   async validateFlow(
-    flowName: string,
+    flowId: string,
     parameters: Record<string, any>,
   ): Promise<ValidationResponse> {
-    const response = await fetch(`${BASE_URL}/flows/${flowName}/validate`, {
+    const response = await fetch(`${BASE_URL}/flows/${flowId}/validate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parameters),
@@ -129,11 +139,11 @@ class FlowsAPI {
 
   // Execute a flow with parameters
   async executeFlow(
-    flowName: string,
+    flowId: string,
     parameters: Record<string, any>,
     timeout = 300,
   ): Promise<ExecutionResponse> {
-    const response = await fetch(`${BASE_URL}/flows/${flowName}/execute`, {
+    const response = await fetch(`${BASE_URL}/flows/${flowId}/execute`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ parameters, timeout }),
@@ -143,14 +153,14 @@ class FlowsAPI {
 
   // Execute a flow with streaming support
   async executeFlowStreaming(
-    flowName: string,
+    flowId: string,
     parameters: Record<string, any>,
     onEvent: (event: any) => void,
     timeout = 300,
   ): Promise<void> {
     try {
       const response = await fetch(
-        `${BASE_URL}/flows/${flowName}/execute-stream`,
+        `${BASE_URL}/flows/${flowId}/execute-stream`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -202,9 +212,9 @@ class FlowsAPI {
 
   // Delete a specific flow
   async deleteFlow(
-    flowName: string,
+    flowId: string,
   ): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${BASE_URL}/flows/${flowName}`, {
+    const response = await fetch(`${BASE_URL}/flows/${flowId}`, {
       method: "DELETE",
     });
     return this.handleResponse<{ success: boolean; message: string }>(response);
@@ -220,21 +230,21 @@ class FlowsAPI {
 
   // Get flow source code
   async getFlowCode(
-    flowName: string,
+    flowId: string,
   ): Promise<{ flow_name: string; source_code: string }> {
-    const response = await fetch(`${BASE_URL}/flows/${flowName}/code`);
+    const response = await fetch(`${BASE_URL}/flows/${flowId}/code`);
     return this.handleResponse<{ flow_name: string; source_code: string }>(
       response,
     );
   }
 
   // Get flow explanation
-  async getFlowExplanation(flowName: string): Promise<{
+  async getFlowExplanation(flowId: string): Promise<{
     flow_name: string;
     explanation: string;
     created_at: string;
   }> {
-    const response = await fetch(`${BASE_URL}/flows/${flowName}/explanation`);
+    const response = await fetch(`${BASE_URL}/flows/${flowId}/explanation`);
     return this.handleResponse<{
       flow_name: string;
       explanation: string;
@@ -243,13 +253,13 @@ class FlowsAPI {
   }
 
   // Regenerate flow explanation
-  async regenerateFlowExplanation(flowName: string): Promise<{
+  async regenerateFlowExplanation(flowId: string): Promise<{
     flow_name: string;
     explanation: string;
     created_at: string;
   }> {
     const response = await fetch(
-      `${BASE_URL}/flows/${flowName}/regenerate-explanation`,
+      `${BASE_URL}/flows/${flowId}/regenerate-explanation`,
       {
         method: "POST",
       },

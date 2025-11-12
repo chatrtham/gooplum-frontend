@@ -52,11 +52,9 @@ export default function FlowDetailsPage() {
       // Fetch flow schema and explanation in parallel
       const [schemaData, explanationData] = await Promise.all([
         flowsAPI.getFlowSchema(flowId),
-        flowsAPI
-          .getFlowExplanation(flowId)
-          .catch(() => ({
-            explanation: "No explanation available for this flow.",
-          })),
+        flowsAPI.getFlowExplanation(flowId).catch(() => ({
+          explanation: "No explanation available for this flow.",
+        })),
       ]);
 
       setFlowSchema(schemaData);

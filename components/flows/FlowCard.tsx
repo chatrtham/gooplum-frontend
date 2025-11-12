@@ -4,14 +4,7 @@ import { Card } from "@/components/ui/card";
 import { ClockIcon, PlayIcon } from "lucide-react";
 import Link from "next/link";
 import { motion } from "motion/react";
-
-export interface Flow {
-  id: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  lastExecuted?: string;
-}
+import { Flow } from "@/lib/flowsApi";
 
 interface FlowCardProps {
   flow: Flow;

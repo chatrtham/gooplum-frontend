@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { PlusIcon, RefreshCwIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { FlowCard, Flow } from "./FlowCard";
+import { FlowCard } from "./FlowCard";
+import { Flow } from "@/lib/flowsApi";
 import { motion, AnimatePresence } from "motion/react";
 import { flowsAPI } from "@/lib/flowsApi";
 
