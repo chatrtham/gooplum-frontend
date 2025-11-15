@@ -26,18 +26,15 @@ export interface FlowSchema {
   id: string;
   name: string;
   description: string;
-  parameters: {
-    type: "object";
-    properties: Record<
-      string,
-      {
-        type: "string" | "integer" | "number" | "boolean" | "array" | "object";
-        description?: string;
-        default?: any;
-      }
-    >;
-    required: string[];
-  };
+  parameters: Record<
+    string,
+    {
+      type: "string" | "integer" | "number" | "boolean" | "array" | "object";
+      description?: string;
+      required?: boolean;
+      default?: any;
+    }
+  >;
   return_type: string;
   created_at?: string; // ISO timestamp
   last_executed?: string; // ISO timestamp

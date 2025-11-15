@@ -62,16 +62,23 @@ export default function FlowDetailsPage() {
 
       // Initialize form data with default values from schema
       const initialData: Record<string, any> = {};
-      Object.entries(schemaData.parameters.properties).forEach(
-        ([paramName, paramSchema]) => {
-          initialData[paramName] =
-            paramSchema.default !== undefined
-              ? paramSchema.default
-              : paramSchema.type === "boolean"
-                ? false
-                : "";
-        },
-      );
+
+      // The API returns parameters as a flat object: { paramName: { type, description, required, default } }
+      if (schemaData.parameters) {
+        Object.entries(schemaData.parameters).forEach(
+          ([paramName, paramSchema]) => {
+            initialData[paramName] =
+              paramSchema.default !== undefined
+                ? paramSchema.default
+                : paramSchema.type === "boolean"
+                  ? false
+                  : "";
+          },
+        );
+      } else {
+        console.warn("No parameters found in schema");
+      }
+
       setFormData(initialData);
     } catch (err) {
       console.error("Failed to fetch flow data:", err);
@@ -219,109 +226,109 @@ export default function FlowDetailsPage() {
 
             {/* Dynamic Input Fields */}
             <div className="space-y-4">
-              {Object.entries(flowSchema.parameters.properties).map(
-                ([paramName, paramSchema]) => {
-                  const isRequired =
-                    flowSchema.parameters.required.includes(paramName);
+              {flowSchema.parameters &&
+                Object.entries(flowSchema.parameters).map(
+                  ([paramName, paramSchema]) => {
+                    const isRequired = paramSchema.required || false;
 
-                  return (
-                    <div key={paramName} className="space-y-2">
-                      <Label
-                        htmlFor={paramName}
-                        className="text-sm font-medium text-foreground"
-                      >
-                        {paramName}
-                        {isRequired && (
-                          <span className="ml-1 text-destructive">*</span>
-                        )}
-                      </Label>
-
-                      {paramSchema.description && (
-                        <p className="text-xs text-muted-foreground">
-                          {paramSchema.description}
-                        </p>
-                      )}
-
-                      {paramSchema.type === "boolean" ? (
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id={paramName}
-                            checked={Boolean(formData[paramName])}
-                            onCheckedChange={(checked) =>
-                              handleInputChange(paramName, checked)
-                            }
-                          />
-                          <Label
-                            htmlFor={paramName}
-                            className="text-sm text-muted-foreground"
-                          >
-                            {paramSchema.description || "Enable this option"}
-                          </Label>
-                        </div>
-                      ) : paramSchema.type === "integer" ||
-                        paramSchema.type === "number" ? (
-                        <Input
-                          id={paramName}
-                          type="number"
-                          placeholder={
-                            paramSchema.description || `Enter ${paramName}`
-                          }
-                          value={
-                            formData[paramName] ?? paramSchema.default ?? ""
-                          }
-                          onChange={(e) =>
-                            handleInputChange(
-                              paramName,
-                              paramSchema.type === "integer"
-                                ? parseInt(e.target.value) || 0
-                                : parseFloat(e.target.value) || 0,
-                            )
-                          }
-                          className="border-border bg-background"
-                        />
-                      ) : paramSchema.type === "object" ||
-                        paramSchema.type === "array" ? (
-                        <textarea
-                          id={paramName}
-                          placeholder={
-                            paramSchema.description ||
-                            `Enter ${paramName} as JSON`
-                          }
-                          value={JSON.stringify(
-                            formData[paramName] || paramSchema.default || {},
-                            null,
-                            2,
+                    return (
+                      <div key={paramName} className="space-y-2">
+                        <Label
+                          htmlFor={paramName}
+                          className="text-sm font-medium text-foreground"
+                        >
+                          {paramName}
+                          {isRequired && (
+                            <span className="ml-1 text-destructive">*</span>
                           )}
-                          onChange={(e) => {
-                            try {
-                              const parsed = JSON.parse(e.target.value);
-                              handleInputChange(paramName, parsed);
-                            } catch (e) {
-                              // Invalid JSON, ignore
+                        </Label>
+
+                        {paramSchema.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {paramSchema.description}
+                          </p>
+                        )}
+
+                        {paramSchema.type === "boolean" ? (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id={paramName}
+                              checked={Boolean(formData[paramName])}
+                              onCheckedChange={(checked) =>
+                                handleInputChange(paramName, checked)
+                              }
+                            />
+                            <Label
+                              htmlFor={paramName}
+                              className="text-sm text-muted-foreground"
+                            >
+                              {paramSchema.description || "Enable this option"}
+                            </Label>
+                          </div>
+                        ) : paramSchema.type === "integer" ||
+                          paramSchema.type === "number" ? (
+                          <Input
+                            id={paramName}
+                            type="number"
+                            placeholder={
+                              paramSchema.description || `Enter ${paramName}`
                             }
-                          }}
-                          className="h-24 w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm"
-                        />
-                      ) : (
-                        <Input
-                          id={paramName}
-                          type="text"
-                          placeholder={
-                            paramSchema.description || `Enter ${paramName}`
-                          }
-                          value={
-                            formData[paramName] ?? paramSchema.default ?? ""
-                          }
-                          onChange={(e) =>
-                            handleInputChange(paramName, e.target.value)
-                          }
-                          className="border-border bg-background"
-                        />
-                      )}
-                    </div>
-                  );
-                },
-              )}
+                            value={
+                              formData[paramName] ?? paramSchema.default ?? ""
+                            }
+                            onChange={(e) =>
+                              handleInputChange(
+                                paramName,
+                                paramSchema.type === "integer"
+                                  ? parseInt(e.target.value) || 0
+                                  : parseFloat(e.target.value) || 0,
+                              )
+                            }
+                            className="border-border bg-background"
+                          />
+                        ) : paramSchema.type === "object" ||
+                          paramSchema.type === "array" ? (
+                          <textarea
+                            id={paramName}
+                            placeholder={
+                              paramSchema.description ||
+                              `Enter ${paramName} as JSON`
+                            }
+                            value={JSON.stringify(
+                              formData[paramName] || paramSchema.default || {},
+                              null,
+                              2,
+                            )}
+                            onChange={(e) => {
+                              try {
+                                const parsed = JSON.parse(e.target.value);
+                                handleInputChange(paramName, parsed);
+                              } catch (e) {
+                                // Invalid JSON, ignore
+                              }
+                            }}
+                            className="h-24 w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm"
+                          />
+                        ) : (
+                          <Input
+                            id={paramName}
+                            type="text"
+                            placeholder={
+                              paramSchema.description || `Enter ${paramName}`
+                            }
+                            value={
+                              formData[paramName] ?? paramSchema.default ?? ""
+                            }
+                            onChange={(e) =>
+                              handleInputChange(paramName, e.target.value)
+                            }
+                            className="border-border bg-background"
+                          />
+                        )}
+                      </div>
+                    );
+                  },
+                )}
             </div>
 
             {/* Execution Result/Error Display */}
