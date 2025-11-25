@@ -117,7 +117,7 @@ class FlowsAPI {
 
   // Get detailed schema for a specific flow
   async getFlowSchema(flowId: string): Promise<FlowSchema> {
-    const response = await fetch(`${BASE_URL}/flows/${flowId}`);
+    const response = await fetch(`${BASE_URL}/flows/${flowId}/schema`);
     return this.handleResponse<FlowSchema>(response);
   }
 
