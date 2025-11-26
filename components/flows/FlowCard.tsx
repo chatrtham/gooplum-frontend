@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { ClockIcon, PlayIcon } from "lucide-react";
+import { ClockIcon } from "lucide-react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { Flow } from "@/lib/flowsApi";
@@ -45,13 +45,6 @@ export function FlowCard({ flow }: FlowCardProps) {
               <ClockIcon className="mr-1 size-3" />
               Created {flow.createdAt}
             </div>
-
-            {flow.lastExecuted && (
-              <div className="flex items-center text-xs text-muted-foreground">
-                <PlayIcon className="mr-1 size-3" />
-                Last run {flow.lastExecuted}
-              </div>
-            )}
           </div>
 
           {/* Hover indicator */}

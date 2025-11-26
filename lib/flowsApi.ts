@@ -11,7 +11,6 @@ export interface FlowInfo {
   required_parameters: number;
   return_type: string;
   created_at?: string; // ISO timestamp
-  last_executed?: string; // ISO timestamp
 }
 
 export interface Flow {
@@ -19,7 +18,6 @@ export interface Flow {
   name: string;
   description: string;
   createdAt: string;
-  lastExecuted?: string;
 }
 
 export interface FlowSchema {
@@ -37,7 +35,6 @@ export interface FlowSchema {
   >;
   return_type: string;
   created_at?: string; // ISO timestamp
-  last_executed?: string; // ISO timestamp
 }
 
 export interface FlowExecutionRequest {
@@ -67,6 +64,48 @@ export interface CompilationResponse {
   compiled_count: number;
 }
 
+export interface FlowStreamEvent {
+  type: "stream";
+  status: "success" | "failed";
+  message: string;
+  timestamp: string;
+}
+
+export interface FlowCompletionEvent {
+  type: "complete";
+  success: boolean;
+  data?: any;
+  error?: string;
+  execution_time?: number;
+  timestamp: string;
+  metadata?: Record<string, any>;
+}
+
+export type FlowEvent = FlowStreamEvent | FlowCompletionEvent;
+
+export interface FlowRun {
+  id: string;
+  flow_id: string;
+  status: "RUNNING" | "COMPLETED" | "FAILED";
+  created_at: string;
+  completed_at?: string;
+  execution_time_ms?: number;
+  parameters?: Record<string, any>;
+  result?: any;
+  error?: string | null;
+  metadata?: Record<string, any>;
+  stream_events?: {
+    id?: string;
+    event_type: string;
+    payload: {
+      status: "success" | "failed";
+      message: string;
+    };
+    sequence_order?: number;
+    created_at: string;
+  }[];
+}
+
 // Transform FlowInfo from API to our Flow interface
 const transformFlowInfo = (flowInfo: FlowInfo): Flow => ({
   id: flowInfo.id,
@@ -75,9 +114,6 @@ const transformFlowInfo = (flowInfo: FlowInfo): Flow => ({
   createdAt: flowInfo.created_at
     ? new Date(flowInfo.created_at).toLocaleDateString()
     : "Recently",
-  lastExecuted: flowInfo.last_executed
-    ? new Date(flowInfo.last_executed).toLocaleDateString()
-    : undefined,
 });
 
 class FlowsAPI {
@@ -117,7 +153,7 @@ class FlowsAPI {
 
   // Get detailed schema for a specific flow
   async getFlowSchema(flowId: string): Promise<FlowSchema> {
-    const response = await fetch(`${BASE_URL}/flows/${flowId}`);
+    const response = await fetch(`${BASE_URL}/flows/${flowId}/schema`);
     return this.handleResponse<FlowSchema>(response);
   }
 
@@ -149,10 +185,10 @@ class FlowsAPI {
   }
 
   // Execute a flow with streaming support
-  async executeFlowStreaming(
+  async executeFlowStream(
     flowId: string,
     parameters: Record<string, any>,
-    onEvent: (event: any) => void,
+    onEvent: (event: FlowEvent) => void,
     timeout = 300,
   ): Promise<void> {
     try {
@@ -200,11 +236,35 @@ class FlowsAPI {
       }
     } catch (error) {
       console.error("Streaming error:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Streaming failed";
+
       onEvent({
-        type: "error",
-        message: error instanceof Error ? error.message : "Streaming failed",
+        type: "stream",
+        status: "failed",
+        message: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
+
+      onEvent({
+        type: "complete",
+        success: false,
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
       });
     }
+  }
+
+  // Get run history for a flow
+  async getFlowRuns(flowId: string): Promise<FlowRun[]> {
+    const response = await fetch(`${BASE_URL}/flows/${flowId}/runs`);
+    return this.handleResponse<FlowRun[]>(response);
+  }
+
+  // Get details of a specific run
+  async getFlowRunDetails(runId: string): Promise<FlowRun> {
+    const response = await fetch(`${BASE_URL}/flows/runs/${runId}`);
+    return this.handleResponse<FlowRun>(response);
   }
 
   // Delete a specific flow
