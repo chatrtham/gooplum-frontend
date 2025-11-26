@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusIcon, RefreshCwIcon, Activity } from "lucide-react";
+import { PlusIcon, RefreshCwIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FlowCard } from "./FlowCard";
@@ -81,22 +81,6 @@ export function FlowsListPage() {
             <h1 className="text-xl font-semibold text-foreground">GoopLum</h1>
 
             <div className="flex items-center gap-2">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link href="/executions">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2 border-border bg-card text-foreground shadow-xs hover:bg-accent"
-                  >
-                    <Activity className="size-4" />
-                    Executions
-                  </Button>
-                </Link>
-              </motion.div>
-
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
