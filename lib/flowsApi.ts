@@ -67,6 +67,48 @@ export interface CompilationResponse {
   compiled_count: number;
 }
 
+// Execution History Types
+export type ExecutionStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
+
+export interface StreamItem {
+  input: Record<string, any>;
+  status: "success" | "error" | "pending" | "running";
+  message: string;
+  timestamp: string;
+}
+
+export interface FlowExecution {
+  id: string;
+  flow_id: string;
+  flow_name: string;
+  status: ExecutionStatus;
+  parameters: Record<string, any>;
+  success: boolean;
+  result?: Record<string, any>;
+  error?: string;
+  execution_time_ms?: number;
+  metadata: Record<string, any>;
+  streams: StreamItem[];
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+}
+
+export interface ExecutionHistoryResponse {
+  executions: FlowExecution[];
+  total_count: number;
+  page: number;
+  page_size: number;
+}
+
+export interface ExecutionStatusResponse {
+  id: string;
+  status: ExecutionStatus;
+  started_at?: string;
+  completed_at?: string;
+  execution_time_ms?: number;
+}
+
 // Transform FlowInfo from API to our Flow interface
 const transformFlowInfo = (flowInfo: FlowInfo): Flow => ({
   id: flowInfo.id,
@@ -117,7 +159,7 @@ class FlowsAPI {
 
   // Get detailed schema for a specific flow
   async getFlowSchema(flowId: string): Promise<FlowSchema> {
-    const response = await fetch(`${BASE_URL}/flows/${flowId}`);
+    const response = await fetch(`${BASE_URL}/flows/${flowId}/schema`);
     return this.handleResponse<FlowSchema>(response);
   }
 
@@ -266,6 +308,111 @@ class FlowsAPI {
       explanation: string;
       created_at: string;
     }>(response);
+  }
+
+  // Execution History Methods
+
+  // Get execution history for a specific flow
+  async getFlowExecutions(
+    flowId: string,
+    page = 1,
+    pageSize = 20,
+    status?: ExecutionStatus
+  ): Promise<ExecutionHistoryResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    });
+
+    if (status) {
+      params.append("status", status);
+    }
+
+    const response = await fetch(
+      `${BASE_URL}/flows/${flowId}/executions?${params}`
+    );
+    return this.handleResponse<ExecutionHistoryResponse>(response);
+  }
+
+  // Get all executions (global view)
+  async getAllExecutions(
+    page = 1,
+    pageSize = 20,
+    status?: ExecutionStatus,
+    flowId?: string
+  ): Promise<ExecutionHistoryResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+    });
+
+    if (status) {
+      params.append("status", status);
+    }
+
+    if (flowId) {
+      params.append("flow_id", flowId);
+    }
+
+    const response = await fetch(`${BASE_URL}/flows/executions?${params}`);
+    return this.handleResponse<ExecutionHistoryResponse>(response);
+  }
+
+  // Get detailed execution information
+  async getExecution(executionId: string): Promise<FlowExecution> {
+    const response = await fetch(`${BASE_URL}/flows/executions/${executionId}`);
+    return this.handleResponse<FlowExecution>(response);
+  }
+
+  // Get execution status (lightweight polling)
+  async getExecutionStatus(executionId: string): Promise<ExecutionStatusResponse> {
+    const response = await fetch(`${BASE_URL}/flows/executions/${executionId}/status`);
+    return this.handleResponse<ExecutionStatusResponse>(response);
+  }
+
+  // Cancel a running execution
+  async cancelExecution(executionId: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${BASE_URL}/flows/executions/${executionId}/cancel`, {
+      method: "POST",
+    });
+    return this.handleResponse<{ success: boolean; message: string }>(response);
+  }
+
+  // Helper method for polling execution status with retry
+  async pollExecutionStatus(
+    executionId: string,
+    onStatusChange: (status: ExecutionStatus) => void,
+    onComplete?: (data: ExecutionStatusResponse) => void,
+    onError?: (error: Error) => void,
+    maxRetries = 3
+  ): Promise<void> {
+    let retryCount = 0;
+
+    const poll = async (): Promise<void> => {
+      try {
+        const data = await this.getExecutionStatus(executionId);
+        onStatusChange(data.status);
+
+        if (["completed", "failed", "cancelled"].includes(data.status)) {
+          onComplete?.(data);
+          return;
+        }
+
+        // Poll again after 2 seconds
+        setTimeout(poll, 2000);
+      } catch (error) {
+        retryCount++;
+        if (retryCount < maxRetries) {
+          console.warn(`Polling attempt ${retryCount} failed, retrying...`);
+          setTimeout(poll, 1000 * retryCount); // Back off on error
+        } else {
+          const finalError = error instanceof Error ? error : new Error("Polling failed");
+          onError?.(finalError);
+        }
+      }
+    };
+
+    poll();
   }
 }
 
