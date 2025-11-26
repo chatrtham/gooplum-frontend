@@ -133,7 +133,7 @@ export function FlowsListPage() {
               My Flows
             </h2>
             <p className="text-muted-foreground">
-              Manage and automate your workflows with ease
+              Manage and run your flows with ease
             </p>
           </div>
         </motion.div>
@@ -227,8 +227,8 @@ export function FlowsListPage() {
                 No flows yet
               </h3>
               <p className="mx-auto max-w-md text-muted-foreground">
-                Start by describing what you want to automate to Goopie AI, and
-                it&apos;ll help you create your first automated workflow.
+                Start by describing what you want to do to Goopie AI, and
+                it&apos;ll help you create your first flow.
               </p>
             </motion.div>
             <motion.div
