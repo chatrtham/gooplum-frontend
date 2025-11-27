@@ -59,6 +59,9 @@ export default function FlowDetailsPage() {
   });
   const [streamEvents, setStreamEvents] = useState<FlowStreamEvent[]>([]);
   const [runHistory, setRunHistory] = useState<FlowRun[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalRuns, setTotalRuns] = useState(0);
+  const pageSize = 10;
   const [selectedRun, setSelectedRun] = useState<FlowRun | null>(null);
   const [selectedRunDetails, setSelectedRunDetails] = useState<FlowRun | null>(
     null,
@@ -131,10 +134,12 @@ export default function FlowDetailsPage() {
     }
   };
 
-  const fetchRunHistory = async () => {
+  const fetchRunHistory = async (page = currentPage) => {
     try {
-      const runs = await flowsAPI.getFlowRuns(flowId);
-      setRunHistory(runs);
+      const response = await flowsAPI.getFlowRuns(flowId, page, pageSize);
+      setRunHistory(response.runs);
+      setTotalRuns(response.total);
+      setCurrentPage(response.page);
     } catch (err) {
       console.error("Failed to fetch run history:", err);
     }
@@ -142,7 +147,7 @@ export default function FlowDetailsPage() {
 
   useEffect(() => {
     fetchFlowData();
-    fetchRunHistory();
+    fetchRunHistory(1);
   }, [flowId]);
 
   if (loading) {
@@ -638,6 +643,9 @@ export default function FlowDetailsPage() {
                   <RunHistoryList
                     runs={runHistory}
                     onSelectRun={handleRunSelect}
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(totalRuns / pageSize)}
+                    onPageChange={(page) => fetchRunHistory(page)}
                   />
                 )}
               </div>

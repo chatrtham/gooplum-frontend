@@ -106,6 +106,13 @@ export interface FlowRun {
   }[];
 }
 
+export interface PaginatedFlowRuns {
+  runs: FlowRun[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 // Transform FlowInfo from API to our Flow interface
 const transformFlowInfo = (flowInfo: FlowInfo): Flow => ({
   id: flowInfo.id,
@@ -256,9 +263,15 @@ class FlowsAPI {
   }
 
   // Get run history for a flow
-  async getFlowRuns(flowId: string): Promise<FlowRun[]> {
-    const response = await fetch(`${BASE_URL}/flows/${flowId}/runs`);
-    return this.handleResponse<FlowRun[]>(response);
+  async getFlowRuns(
+    flowId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedFlowRuns> {
+    const response = await fetch(
+      `${BASE_URL}/flows/${flowId}/runs?page=${page}&limit=${limit}`,
+    );
+    return this.handleResponse<PaginatedFlowRuns>(response);
   }
 
   // Get details of a specific run
