@@ -104,10 +104,10 @@ export function RunHistoryList({
               key={run.id}
               onClick={() => onSelectRun(run)}
               className={cn(
-                "flex cursor-pointer items-center justify-between rounded-lg border p-3 shadow-xs transition-all",
+                "flex cursor-pointer items-center justify-between rounded-lg border p-3 shadow-xs transition-colors hover:bg-muted/50",
                 selectedRunId === run.id
                   ? "border-primary bg-primary/5"
-                  : "border-border bg-card hover:border-primary/20 hover:shadow-sm",
+                  : "border-border bg-card",
               )}
             >
               <div className="flex min-w-0 flex-1 items-center gap-3">
