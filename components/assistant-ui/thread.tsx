@@ -5,6 +5,7 @@ import {
   ErrorPrimitive,
   MessagePrimitive,
   ThreadPrimitive,
+  useAssistantState,
 } from "@assistant-ui/react";
 import {
   ArrowDownIcon,
@@ -26,7 +27,11 @@ import {
 } from "@/components/assistant-ui/attachment";
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
+import { AskUserToolUI } from "@/components/assistant-ui/ask-user-tool-ui";
+import { FlowCompilerToolUI } from "@/components/assistant-ui/flow-compiler-tool-ui";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
+import { AskUserInterrupt } from "@/components/AskUserInterrupt";
+import { useLangGraphInterruptState } from "@assistant-ui/react-langgraph";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
@@ -52,6 +57,10 @@ export const Thread: FC = () => {
                 AssistantMessage,
               }}
             />
+
+            {/* Human-in-the-loop interrupt UI for ask_user tool */}
+            <AskUserInterrupt />
+
             <ThreadPrimitive.If empty={false}>
               <div className="aui-thread-viewport-spacer min-h-8 grow" />
             </ThreadPrimitive.If>
@@ -185,7 +194,13 @@ const AssistantMessage: FC = () => {
           <MessagePrimitive.Parts
             components={{
               Text: MarkdownText,
-              tools: { Fallback: ToolFallback },
+              tools: {
+                Fallback: ToolFallback,
+                by_name: {
+                  ask_user: AskUserToolUI,
+                  flow_compiler: FlowCompilerToolUI,
+                },
+              },
             }}
           />
           <MessageError />
@@ -201,6 +216,11 @@ const AssistantMessage: FC = () => {
 };
 
 const AssistantActionBar: FC = () => {
+  // Hide action bar buttons ONLY on the last message when there's an active interrupt
+  const interrupt = useLangGraphInterruptState();
+  const isLast = useAssistantState(({ message }) => message.isLast);
+  const shouldHideButtons = isLast && !!interrupt?.value;
+
   return (
     <ActionBarPrimitive.Root
       hideWhenRunning
@@ -208,21 +228,26 @@ const AssistantActionBar: FC = () => {
       autohideFloat="single-branch"
       className="aui-assistant-action-bar-root col-start-3 row-start-2 -ml-1 flex gap-1 text-muted-foreground data-floating:absolute data-floating:rounded-md data-floating:border data-floating:bg-background data-floating:p-1 data-floating:shadow-sm"
     >
-      <ActionBarPrimitive.Copy asChild>
-        <TooltipIconButton tooltip="Copy">
-          <MessagePrimitive.If copied>
-            <CheckIcon />
-          </MessagePrimitive.If>
-          <MessagePrimitive.If copied={false}>
-            <CopyIcon />
-          </MessagePrimitive.If>
-        </TooltipIconButton>
-      </ActionBarPrimitive.Copy>
-      <ActionBarPrimitive.Reload asChild>
-        <TooltipIconButton tooltip="Refresh">
-          <RefreshCwIcon />
-        </TooltipIconButton>
-      </ActionBarPrimitive.Reload>
+      {/* Show buttons unless this is the last message AND there's an active interrupt */}
+      {!shouldHideButtons && (
+        <>
+          <ActionBarPrimitive.Copy asChild>
+            <TooltipIconButton tooltip="Copy">
+              <MessagePrimitive.If copied>
+                <CheckIcon />
+              </MessagePrimitive.If>
+              <MessagePrimitive.If copied={false}>
+                <CopyIcon />
+              </MessagePrimitive.If>
+            </TooltipIconButton>
+          </ActionBarPrimitive.Copy>
+          <ActionBarPrimitive.Reload asChild>
+            <TooltipIconButton tooltip="Refresh">
+              <RefreshCwIcon />
+            </TooltipIconButton>
+          </ActionBarPrimitive.Reload>
+        </>
+      )}
     </ActionBarPrimitive.Root>
   );
 };
