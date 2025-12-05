@@ -53,12 +53,12 @@ export const AskUserToolUI: ToolCallMessagePartComponent<
       <div className="flex flex-col gap-3 border-t border-border/50 pt-3">
         {questions.map((q: QuestionItem, idx: number) => (
           <div key={idx} className="flex flex-col gap-1.5 px-4">
-            <p className="text-sm text-muted-foreground">
-              {idx + 1}. {q.question}
+            <p className="text-sm whitespace-pre-wrap text-muted-foreground">
+              {idx + 1}. {q.question.replace(/\\n/g, "\n")}
             </p>
             {answers[idx] && (
-              <p className="rounded-md bg-background px-3 py-2 text-sm font-medium text-foreground">
-                {answers[idx]}
+              <p className="rounded-md bg-background px-3 py-2 text-sm font-medium whitespace-pre-wrap text-foreground">
+                {answers[idx].replace(/\\n/g, "\n")}
               </p>
             )}
           </div>

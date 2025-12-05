@@ -65,7 +65,9 @@ export const AskUserInterrupt = () => {
         <CardContent className="flex flex-col gap-4">
           {questions.map((q, idx) => (
             <div key={idx} className="flex flex-col gap-2">
-              <Label className="text-base">{q.question}</Label>
+              <Label className="text-base whitespace-pre-wrap">
+                {q.question.replace(/\\n/g, "\n")}
+              </Label>
 
               {/* Show suggested answers as clickable buttons */}
               {q.suggested_answers && q.suggested_answers.length > 0 && (
