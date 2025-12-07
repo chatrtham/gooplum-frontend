@@ -1,26 +1,48 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusIcon, RefreshCwIcon } from "lucide-react";
+import {
+  PlusIcon,
+  RefreshCwIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FlowCard } from "./FlowCard";
 import { Flow } from "@/lib/flowsApi";
 import { motion, AnimatePresence } from "motion/react";
 import { flowsAPI } from "@/lib/flowsApi";
+import { Navigation } from "@/components/Navigation";
 
 export function FlowsListPage() {
   const [flows, setFlows] = useState<Flow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [limit] = useState(12);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(total / limit);
 
   // Fetch flows from the API
-  const fetchFlows = async () => {
+  const fetchFlows = async (pageNum: number = page) => {
     try {
       setLoading(true);
       setError(null);
-      const fetchedFlows = await flowsAPI.getFlows();
-      setFlows(fetchedFlows);
+      const paginatedFlows = await flowsAPI.getFlows(pageNum, limit);
+      const transformedFlows = paginatedFlows.flows.map((flowInfo) => ({
+        id: flowInfo.id,
+        name: flowInfo.name,
+        description: flowInfo.description,
+        createdAt: flowInfo.created_at
+          ? new Date(flowInfo.created_at).toLocaleDateString()
+          : "Recently",
+      }));
+      setFlows(transformedFlows);
+      setTotal(paginatedFlows.total);
+      setPage(paginatedFlows.page);
     } catch (err) {
       console.error("Failed to fetch flows:", err);
       setError(err instanceof Error ? err.message : "Failed to load flows");
@@ -29,15 +51,20 @@ export function FlowsListPage() {
     }
   };
 
-  // Initial fetch and auto-refresh every 30 seconds
+  // Initial fetch
   useEffect(() => {
     fetchFlows();
-
-    // Set up auto-refresh
-    const interval = setInterval(fetchFlows, 30000);
-
-    return () => clearInterval(interval);
   }, []);
+
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+      fetchFlows(newPage);
+      // Scroll to top smoothly
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -78,7 +105,10 @@ export function FlowsListPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-xl font-semibold text-foreground">GoopLum</h1>
+            <div className="flex items-center gap-8">
+              <h1 className="text-xl font-semibold text-foreground">GoopLum</h1>
+              <Navigation />
+            </div>
 
             <div className="flex items-center gap-2">
               <motion.div
@@ -88,7 +118,10 @@ export function FlowsListPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={fetchFlows}
+                  onClick={() => {
+                    setPage(1);
+                    fetchFlows(1);
+                  }}
                   disabled={loading}
                   className="flex items-center gap-2 border-border bg-card text-foreground shadow-xs hover:bg-accent"
                 >
@@ -170,7 +203,10 @@ export function FlowsListPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={fetchFlows}
+                  onClick={() => {
+                    setPage(1);
+                    fetchFlows(1);
+                  }}
                   className="mt-3 border-destructive/20 text-destructive hover:bg-destructive/10"
                 >
                   Try Again
@@ -181,25 +217,112 @@ export function FlowsListPage() {
         )}
 
         {/* Flows Grid */}
-        {!loading && !error && (
-          <motion.div
-            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <AnimatePresence>
-              {flows.map((flow) => (
-                <motion.div
-                  key={flow.id}
-                  variants={itemVariants}
-                  layoutId={`flow-${flow.id}`}
+        {!loading && !error && flows.length > 0 && (
+          <>
+            <motion.div
+              className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              <AnimatePresence>
+                {flows.map((flow) => (
+                  <motion.div
+                    key={flow.id}
+                    variants={itemVariants}
+                    layoutId={`flow-${flow.id}`}
+                  >
+                    <FlowCard flow={flow} />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <motion.div
+                className="mt-8 flex items-center justify-center gap-2"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1 || loading}
+                  className="flex items-center gap-1"
                 >
-                  <FlowCard flow={flow} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                  <ChevronLeftIcon className="size-4" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {/* Show page numbers with smart truncation */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((pageNum) => {
+                      // Always show first page, last page, current page, and pages around current
+                      return (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        Math.abs(pageNum - page) <= 1
+                      );
+                    })
+                    .map((pageNum, index, array) => {
+                      // Show ellipsis if there's a gap
+                      const prevPageNum = array[index - 1];
+                      const showEllipsis =
+                        prevPageNum && pageNum - prevPageNum > 1;
+
+                      return (
+                        <div key={pageNum} className="flex items-center gap-1">
+                          {showEllipsis && (
+                            <span className="px-2 text-sm text-muted-foreground">
+                              ...
+                            </span>
+                          )}
+                          <Button
+                            variant={page === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => handlePageChange(pageNum)}
+                            disabled={loading}
+                            className={`min-w-[2.5rem] ${
+                              page === pageNum
+                                ? "bg-primary text-primary-foreground"
+                                : ""
+                            }`}
+                          >
+                            {pageNum}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages || loading}
+                  className="flex items-center gap-1"
+                >
+                  Next
+                  <ChevronRightIcon className="size-4" />
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Pagination Info */}
+            <motion.div
+              className="mt-4 text-center text-sm text-muted-foreground"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              Showing {flows.length > 0 ? (page - 1) * limit + 1 : 0} to{" "}
+              {Math.min(page * limit, total)} of {total} flows
+            </motion.div>
+          </>
         )}
 
         {/* Empty State (if no flows) */}

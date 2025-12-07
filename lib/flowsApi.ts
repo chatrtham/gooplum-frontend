@@ -7,9 +7,6 @@ export interface FlowInfo {
   id: string;
   name: string;
   description: string;
-  parameter_count: number;
-  required_parameters: number;
-  return_type: string;
   created_at?: string; // ISO timestamp
 }
 
@@ -113,6 +110,13 @@ export interface PaginatedFlowRuns {
   limit: number;
 }
 
+export interface PaginatedFlows {
+  flows: FlowInfo[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 // Transform FlowInfo from API to our Flow interface
 const transformFlowInfo = (flowInfo: FlowInfo): Flow => ({
   id: flowInfo.id,
@@ -145,13 +149,23 @@ class FlowsAPI {
     return this.handleResponse<CompilationResponse>(response);
   }
 
-  // Get all available flows
-  async getFlows(): Promise<Flow[]> {
+  // Get paginated flows
+  async getFlows(
+    page: number = 1,
+    limit: number = 12,
+  ): Promise<PaginatedFlows> {
+    const response = await fetch(
+      `${BASE_URL}/flows/?page=${page}&limit=${limit}`,
+    );
+    const paginatedFlows = await this.handleResponse<PaginatedFlows>(response);
+    return paginatedFlows;
+  }
+
+  // Helper to get flows transformed to Flow[] for backwards compatibility
+  async getFlowsList(page: number = 1, limit: number = 12): Promise<Flow[]> {
     try {
-      const response = await fetch(`${BASE_URL}/flows/`);
-      const flowInfos: FlowInfo[] =
-        await this.handleResponse<FlowInfo[]>(response);
-      return flowInfos.map(transformFlowInfo);
+      const paginatedFlows = await this.getFlows(page, limit);
+      return paginatedFlows.flows.map(transformFlowInfo);
     } catch (error) {
       console.error("Failed to fetch flows:", error);
       return [];
