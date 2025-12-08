@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import { motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 
@@ -41,65 +40,17 @@ function Button({
   variant,
   size,
   asChild = false,
-  onDrag: _onDrag,
-  onDragStart: _onDragStart,
-  onDragEnd: _onDragEnd,
-  onAnimationStart: _onAnimationStart,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot : motion.button;
-
-  // For icon buttons, use more subtle animations
-  const isIconButton =
-    size === "icon" ||
-    props["aria-label"] ||
-    (React.Children.toArray(props.children).length === 1 &&
-      React.isValidElement(props.children) &&
-      props.children.type !== "span");
-
-  if (isIconButton) {
-    const motionProps = asChild
-      ? {}
-      : {
-          whileHover: { scale: 1.1 },
-          whileTap: { scale: 0.95 },
-          transition: {
-            type: "spring" as const,
-            stiffness: 400,
-            damping: 17,
-          },
-        };
-
-    return (
-      <Comp
-        data-slot="button"
-        className={cn(buttonVariants({ variant, size, className }))}
-        {...motionProps}
-        {...props}
-      />
-    );
-  }
-
-  const motionProps = asChild
-    ? {}
-    : {
-        whileHover: { scale: 1.02 },
-        whileTap: { scale: 0.98 },
-        transition: {
-          type: "spring" as const,
-          stiffness: 300,
-          damping: 20,
-        },
-      };
+  const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      {...motionProps}
       {...props}
     />
   );

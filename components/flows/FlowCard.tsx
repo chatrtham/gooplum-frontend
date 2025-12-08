@@ -3,7 +3,6 @@
 import { Card } from "@/components/ui/card";
 import { ClockIcon } from "lucide-react";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { Flow } from "@/lib/flowsApi";
 
 interface FlowCardProps {
@@ -12,19 +11,7 @@ interface FlowCardProps {
 
 export function FlowCard({ flow }: FlowCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.5,
-        ease: [0.25, 0.1, 0.25, 1], // Custom cubic bezier for smooth easing
-      }}
-      whileHover={{
-        y: -2,
-        transition: { duration: 0.2 },
-      }}
-      className="group"
-    >
+    <div className="group">
       <Link href={`/flow/${flow.id}`}>
         <Card className="block cursor-pointer border-border bg-card p-6 shadow-xs transition-all duration-200 group-hover:bg-accent/50 hover:shadow-sm">
           {/* Header */}
@@ -53,6 +40,6 @@ export function FlowCard({ flow }: FlowCardProps) {
           </div>
         </Card>
       </Link>
-    </motion.div>
+    </div>
   );
 }

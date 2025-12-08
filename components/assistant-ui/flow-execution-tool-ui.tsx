@@ -101,12 +101,12 @@ export function FlowExecutionToolUI({
           <div
             className={`flex size-8 items-center justify-center rounded-full ${
               status === "running"
-                ? "bg-blue-100 text-blue-600"
+                ? "bg-primary/10 text-primary"
                 : status === "completed"
-                  ? "bg-green-100 text-green-600"
+                  ? "bg-success/10 text-success"
                   : status === "failed"
-                    ? "bg-red-100 text-red-600"
-                    : "bg-gray-100 text-gray-600"
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-muted text-muted-foreground"
             }`}
           >
             {status === "running" ? (
@@ -179,13 +179,15 @@ export function FlowExecutionToolUI({
                 Execution Logs
               </p>
             </div>
-            <div className="max-h-[200px] overflow-y-auto rounded-md bg-black/90 p-3 font-mono text-xs text-green-400 shadow-inner">
+            <div className="max-h-[200px] overflow-y-auto rounded-md border border-border bg-card p-3 font-mono text-xs">
               {logs.length === 0 ? (
-                <span className="text-gray-500">Waiting for logs...</span>
+                <span className="text-muted-foreground">
+                  Waiting for logs...
+                </span>
               ) : (
                 logs.map((log, i) => (
                   <div key={i} className="break-words whitespace-pre-wrap">
-                    <span className="mr-2 text-gray-500">
+                    <span className="mr-2 text-muted-foreground">
                       [{new Date().toLocaleTimeString()}]
                     </span>
                     {log}
@@ -202,8 +204,8 @@ export function FlowExecutionToolUI({
               <p className="text-xs font-medium text-muted-foreground">
                 Result
               </p>
-              <div className="rounded-md border border-green-100 bg-green-50/50 p-3 text-xs">
-                <pre className="overflow-x-auto whitespace-pre-wrap text-green-900">
+              <div className="rounded-md border border-success/20 bg-success/10 p-3 text-xs">
+                <pre className="overflow-x-auto whitespace-pre-wrap text-success-foreground">
                   {typeof executionResult === "object"
                     ? JSON.stringify(executionResult, null, 2)
                     : String(executionResult)}

@@ -5,7 +5,6 @@ import { PlusIcon, RefreshCwIcon, BotIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AgentCard } from "./AgentCard";
-import { motion } from "motion/react";
 import { Navigation } from "@/components/Navigation";
 import { getAssistants } from "@/lib/agentsApi";
 import type { Assistant } from "@/types/agents";
@@ -39,38 +38,19 @@ export function AgentsListPage() {
     fetchAssistants();
   }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="flex h-16 items-center justify-between"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
               <h1 className="text-xl font-semibold text-foreground">GoopLum</h1>
               <Navigation />
             </div>
 
             <div className="flex items-center gap-2">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
+              <div>
                 <Button
                   variant="outline"
                   size="sm"
@@ -83,12 +63,9 @@ export function AgentsListPage() {
                   />
                   Refresh
                 </Button>
-              </motion.div>
+              </div>
 
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
+              <div>
                 <Link href="/agents/new">
                   <Button
                     size="sm"
@@ -98,9 +75,9 @@ export function AgentsListPage() {
                     New Agent
                   </Button>
                 </Link>
-              </motion.div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </header>
 
@@ -145,16 +122,11 @@ export function AgentsListPage() {
             </Link>
           </div>
         ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
-          >
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {assistants.map((assistant) => (
               <AgentCard key={assistant.assistant_id} assistant={assistant} />
             ))}
-          </motion.div>
+          </div>
         )}
       </main>
     </div>

@@ -3,7 +3,6 @@
 import { Card } from "@/components/ui/card";
 import { BotIcon, ClockIcon, WrenchIcon, ZapIcon } from "lucide-react";
 import Link from "next/link";
-import { motion } from "motion/react";
 import type { Assistant } from "@/types/agents";
 
 interface AgentCardProps {
@@ -16,19 +15,7 @@ export function AgentCard({ assistant }: AgentCardProps) {
     (config.flow_tool_ids?.length || 0) + (config.gumcp_services?.length || 0);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.5,
-        ease: [0.25, 0.1, 0.25, 1],
-      }}
-      whileHover={{
-        y: -2,
-        transition: { duration: 0.2 },
-      }}
-      className="group"
-    >
+    <div className="group">
       <Link href={`/agents/${assistant.assistant_id}`}>
         <Card className="block h-full cursor-pointer border-border bg-card p-6 shadow-xs transition-all duration-200 group-hover:bg-accent/50 hover:shadow-sm">
           {/* Header */}
@@ -80,6 +67,6 @@ export function AgentCard({ assistant }: AgentCardProps) {
           </div>
         </Card>
       </Link>
-    </motion.div>
+    </div>
   );
 }
