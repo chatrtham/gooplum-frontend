@@ -57,15 +57,22 @@ export const AskUserInterrupt = () => {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[var(--thread-max-width)] px-4 py-4">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-lg">Goopie needs your input</CardTitle>
+    <div className="mx-auto w-full max-w-[var(--thread-max-width)] px-4 py-6">
+      <Card className="w-full overflow-hidden rounded-2xl border-primary/20 bg-primary/5 shadow-md dark:border-primary/20 dark:bg-primary/10">
+        <CardHeader className="border-b border-primary/10 bg-primary/10 px-6 py-4 dark:border-primary/20 dark:bg-primary/10">
+          <div className="flex items-center gap-3">
+            <div className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+              <span className="text-sm font-bold">?</span>
+            </div>
+            <CardTitle className="text-lg font-semibold text-foreground">
+              Goopie needs your input
+            </CardTitle>
+          </div>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4">
+        <CardContent className="flex flex-col gap-6 p-6">
           {questions.map((q, idx) => (
-            <div key={idx} className="flex flex-col gap-2">
-              <Label className="text-base whitespace-pre-wrap">
+            <div key={idx} className="flex flex-col gap-3">
+              <Label className="text-base leading-relaxed font-medium whitespace-pre-wrap text-foreground">
                 {q.question.replace(/\\n/g, "\n")}
               </Label>
 
@@ -79,6 +86,11 @@ export const AskUserInterrupt = () => {
                       size="sm"
                       onClick={() =>
                         setAnswers((prev) => ({ ...prev, [idx]: ans }))
+                      }
+                      className={
+                        answers[idx] === ans
+                          ? "bg-primary hover:bg-primary/90"
+                          : "bg-background hover:bg-muted"
                       }
                     >
                       {ans}
@@ -94,13 +106,18 @@ export const AskUserInterrupt = () => {
                   setAnswers((prev) => ({ ...prev, [idx]: e.target.value }))
                 }
                 placeholder="Type your answer..."
+                className="h-11 rounded-xl border-input bg-background px-4 shadow-sm transition-all focus-visible:ring-primary/20"
               />
             </div>
           ))}
         </CardContent>
-        <CardFooter>
-          <Button onClick={handleSubmit} className="w-full">
-            Submit
+        <CardFooter className="border-t border-primary/10 bg-primary/5 px-6 py-4 dark:border-primary/20 dark:bg-primary/5">
+          <Button
+            onClick={handleSubmit}
+            className="ml-auto bg-primary px-8 font-medium text-primary-foreground shadow-md hover:bg-primary/90"
+            size="lg"
+          >
+            Submit Answers
           </Button>
         </CardFooter>
       </Card>

@@ -17,6 +17,7 @@ import {
   PencilIcon,
   RefreshCwIcon,
   Square,
+  BotIcon,
 } from "lucide-react";
 import type { FC } from "react";
 
@@ -37,12 +38,12 @@ import { cn } from "@/lib/utils";
 export const AgentThread: FC = () => {
   return (
     <ThreadPrimitive.Root
-      className="aui-root aui-thread-root @container flex h-full flex-col bg-background"
+      className="aui-root aui-thread-root @container flex h-full flex-col bg-transparent"
       style={{
         ["--thread-max-width" as string]: "44rem",
       }}
     >
-      <ThreadPrimitive.Viewport className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-scroll px-4">
+      <ThreadPrimitive.Viewport className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-auto px-4">
         <ThreadWelcome />
 
         <ThreadPrimitive.Messages
@@ -84,12 +85,15 @@ const ThreadWelcome: FC = () => {
     <ThreadPrimitive.Empty>
       <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col">
         <div className="aui-thread-welcome-center flex w-full flex-grow flex-col items-center justify-center">
-          <div className="aui-thread-welcome-message flex size-full flex-col justify-center px-8">
-            <div className="aui-thread-welcome-message-motion-1 text-2xl font-semibold">
-              Agent Ready
+          <div className="aui-thread-welcome-message flex size-full flex-col items-center justify-center px-8 text-center">
+            <div className="mb-6 flex size-20 items-center justify-center rounded-3xl border border-border/50 bg-card text-primary shadow-sm">
+              <BotIcon className="size-10" />
             </div>
-            <div className="aui-thread-welcome-message-motion-2 text-2xl text-muted-foreground/65">
-              How can I help you?
+            <div className="aui-thread-welcome-message-motion-1 mb-3 text-2xl font-semibold tracking-tight text-foreground">
+              Start a new conversation
+            </div>
+            <div className="aui-thread-welcome-message-motion-2 max-w-md leading-relaxed text-muted-foreground">
+              Send a message to start interacting with this agent.
             </div>
           </div>
         </div>
@@ -100,13 +104,13 @@ const ThreadWelcome: FC = () => {
 
 const Composer: FC = () => {
   return (
-    <div className="aui-composer-wrapper sticky bottom-0 mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 overflow-visible rounded-t-3xl bg-background pb-4 md:pb-6">
+    <div className="aui-composer-wrapper sticky bottom-0 mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 overflow-visible px-2 pb-4 md:pb-6">
       <ThreadScrollToBottom />
-      <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col rounded-3xl border border-border bg-muted px-1 pt-2 shadow-[0_9px_9px_0px_rgba(0,0,0,0.01),0_2px_5px_0px_rgba(0,0,0,0.06)] dark:border-muted-foreground/15">
+      <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col rounded-2xl border border-border bg-card px-2 pt-2 shadow-lg ring-offset-background transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2">
         <ComposerAttachments />
         <ComposerPrimitive.Input
-          placeholder="Send a message..."
-          className="aui-composer-input mb-1 max-h-32 min-h-16 w-full resize-none bg-transparent px-3.5 pt-1.5 pb-3 text-base outline-none placeholder:text-muted-foreground focus:outline-primary"
+          placeholder="Type a message..."
+          className="aui-composer-input mb-1 max-h-32 min-h-12 w-full resize-none bg-transparent px-3.5 pt-2.5 pb-3 text-base outline-none placeholder:text-muted-foreground"
           rows={1}
           autoFocus
           aria-label="Message input"
@@ -172,7 +176,7 @@ const AssistantMessage: FC = () => {
         className="aui-assistant-message-root animate-in fade-in slide-in-from-bottom-1 relative mx-auto w-full max-w-[var(--thread-max-width)] py-4 duration-200 last:mb-24"
         data-role="assistant"
       >
-        <div className="aui-assistant-message-content mx-2 leading-7 break-words text-foreground">
+        <div className="aui-assistant-message-content mx-2 px-6 py-4 leading-7 text-foreground">
           <MessagePrimitive.Parts
             components={{
               Text: MarkdownText,
@@ -187,7 +191,7 @@ const AssistantMessage: FC = () => {
           <MessageError />
         </div>
 
-        <div className="aui-assistant-message-footer mt-2 ml-2 flex">
+        <div className="aui-assistant-message-footer mt-2 ml-2 flex px-4">
           <BranchPicker />
           <AssistantActionBar />
         </div>
@@ -240,8 +244,8 @@ const UserMessage: FC = () => {
       >
         <UserMessageAttachments />
 
-        <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-          <div className="aui-user-message-content rounded-3xl bg-muted px-5 py-2.5 break-words text-foreground">
+        <div className="aui-user-message-content-wrapper relative col-start-2 max-w-xl min-w-0">
+          <div className="aui-user-message-content rounded-3xl bg-primary px-5 py-3 break-words text-primary-foreground">
             <MessagePrimitive.Parts />
           </div>
           <div className="aui-user-action-bar-wrapper absolute top-1/2 left-0 -translate-x-full -translate-y-1/2 pr-2">

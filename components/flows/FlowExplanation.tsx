@@ -12,6 +12,10 @@ export function FlowExplanation({ explanation }: FlowExplanationProps) {
       <MarkdownPreview
         source={explanation}
         style={{ backgroundColor: "transparent" }}
+        wrapperElement={{
+          "data-color-mode": "light",
+        }}
+        className="!bg-transparent"
       />
     </div>
   );

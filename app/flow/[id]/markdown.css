@@ -1,353 +1,286 @@
 /* Custom markdown styling override for GraphLoop theme */
+/* Using plain CSS since @apply doesn't work in standalone CSS files */
 
-/* Light and dark mode support */
+/* Light mode variables */
 :root {
-  --markdown-bg: transparent;
-  --markdown-text: hsl(var(--foreground));
-  --markdown-code-bg: hsl(var(--muted));
-  --markdown-code-text: hsl(var(--foreground));
-  --markdown-pre-bg: hsl(var(--card));
-  --markdown-pre-text: hsl(var(--foreground));
-  --markdown-border: hsl(var(--border));
-  --markdown-table-header-bg: hsl(var(--muted));
-  --markdown-table-cell-bg: hsl(var(--card));
+  --md-bg: transparent;
+  --md-text: #111827;
+  --md-text-muted: #6b7280;
+  --md-primary: #d87943;
+  --md-muted-bg: #f3f4f6;
+  --md-border: #e5e7eb;
 }
 
-/* Dark mode specific overrides - Using CSS variables ensures theme consistency */
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Variables automatically adapt to dark mode via hsl(var(--*)) */
-  }
-}
-
-/* Force dark mode styles for when dark class is present */
-html.dark,
+/* Dark mode variables */
 .dark {
-  /* Variables automatically adapt to dark mode via hsl(var(--*)) */
+  --md-bg: transparent;
+  --md-text: #c1c1c1;
+  --md-text-muted: #888888;
+  --md-primary: #e78a53;
+  --md-muted-bg: #222222;
+  --md-border: #222222;
 }
 
-/* Override default markdown styles */
+/* Base markdown container */
 .wmde-markdown,
 .wmde-markdown-preview,
 .markdown-body,
-.markdown-preview {
-  background-color: var(--markdown-bg) !important;
-  color: var(--markdown-text) !important;
-  font-family: var(--font-sans) !important;
-  font-size: 0.875rem !important; /* text-sm - Secondary text, captions (more common in project) */
-  letter-spacing: var(--tracking-normal) !important;
+.markdown-preview,
+[data-color-mode] .wmde-markdown,
+[data-color-mode] .markdown-body {
+  background-color: var(--md-bg) !important;
+  color: var(--md-text) !important;
+  font-family: "Geist Mono", ui-monospace, monospace !important;
+  font-size: 0.875rem !important;
   line-height: 1.7 !important;
 }
 
-/* Code blocks */
-.wmde-markdown pre,
-.wmde-markdown-preview pre,
-.markdown-body pre,
-.markdown-preview pre {
-  background-color: var(--markdown-pre-bg) !important;
-  color: var(--markdown-pre-text) !important;
-  border: 1px solid var(--markdown-border) !important;
-  border-radius: var(--radius) !important;
-  padding: 1rem !important;
-  margin: 1rem 0 !important;
-  box-shadow: var(--shadow-sm) !important;
-  font-family: var(--font-sans) !important;
-  font-size: 0.8rem !important; /* Slightly smaller than text-sm for code */
-  line-height: 1.5 !important;
-  letter-spacing: var(--tracking-tight) !important;
-}
-
-/* Inline code */
-.wmde-markdown code,
-.wmde-markdown-preview code,
-.markdown-body code,
-.markdown-preview code {
-  background-color: var(--markdown-code-bg) !important;
-  color: var(--markdown-code-text) !important;
-  padding: 0.125rem 0.375rem !important;
-  border-radius: var(--radius-sm) !important;
-  font-size: 0.875em !important;
-  border: 1px solid var(--markdown-border) !important;
-  font-weight: 500 !important;
-  font-family: var(--font-sans) !important;
-  letter-spacing: var(--tracking-tight) !important;
-}
-
-/* Code inside pre */
-.wmde-markdown pre code,
-.wmde-markdown-preview pre code,
-.markdown-body pre code,
-.markdown-preview pre code {
-  background-color: transparent !important;
-  color: inherit !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  font-size: inherit !important;
-  font-weight: inherit !important;
-  letter-spacing: inherit !important;
-}
-
-/* Tables */
-.wmde-markdown table,
-.wmde-markdown-preview table,
-.markdown-body table,
-.markdown-preview table {
-  border-collapse: collapse !important;
-  width: 100% !important;
-  margin: 1rem 0 !important;
-  background-color: transparent !important;
-  border-radius: var(--radius) !important;
-  overflow: hidden !important;
-  box-shadow: var(--shadow-sm) !important;
-}
-
-.wmde-markdown th,
-.wmde-markdown-preview th,
-.markdown-body th,
-.markdown-preview th {
-  background-color: var(--markdown-table-header-bg) !important;
-  color: var(--markdown-text) !important;
-  border: 1px solid var(--markdown-border) !important;
-  padding: 0.75rem 1rem !important;
-  text-align: left !important;
-  font-weight: 600 !important;
-  font-family: var(--font-sans) !important;
-  font-size: 0.875rem !important; /* text-sm - Secondary text, captions */
-  letter-spacing: var(--tracking-normal) !important;
-}
-
-.wmde-markdown td,
-.wmde-markdown-preview td,
-.markdown-body td,
-.markdown-preview td {
-  background-color: var(--markdown-table-cell-bg) !important;
-  color: var(--markdown-text) !important;
-  border: 1px solid var(--markdown-border) !important;
-  padding: 0.75rem 1rem !important;
-  font-family: var(--font-sans) !important;
-  font-size: 0.875rem !important; /* text-sm - Secondary text, captions (matching body text) */
-  letter-spacing: var(--tracking-normal) !important;
-}
-
-.wmde-markdown table tr,
-.wmde-markdown-preview table tr,
-.markdown-body table tr,
-.markdown-preview table tr {
-  background-color: transparent !important;
-}
-
-.wmde-markdown table tr:nth-child(even),
-.wmde-markdown-preview table tr:nth-child(even),
-.markdown-body table tr:nth-child(even),
-.markdown-preview table tr:nth-child(even) {
-  background-color: var(--markdown-table-cell-bg) !important;
-}
-
-/* Headings */
+/* Headings - following STYLE.md typography */
 .wmde-markdown h1,
-.wmde-markdown-preview h1,
-.markdown-body h1,
-.markdown-preview h1 {
-  color: var(--markdown-text) !important;
-  font-family: var(--font-sans) !important;
-  font-size: 1.125rem !important; /* text-lg - Dialog titles (reduced from 1.5rem) */
-  font-weight: 600 !important;
-  letter-spacing: var(--tracking-normal) !important;
-  line-height: 1.3 !important;
-  margin-top: 1.5rem !important;
-  margin-bottom: 0.75rem !important;
+.markdown-body h1 {
+  color: var(--md-text) !important;
+  font-size: 1.25rem !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.025em !important;
+  margin-bottom: 2rem !important;
+  margin-top: 0 !important;
 }
 
 .wmde-markdown h2,
-.wmde-markdown-preview h2,
-.markdown-body h2,
-.markdown-preview h2 {
-  color: var(--markdown-text) !important;
-  font-family: var(--font-sans) !important;
-  font-size: 1rem !important; /* text-base - Body text (reduced from 1.125rem) */
-  font-weight: 600 !important;
-  letter-spacing: var(--tracking-normal) !important;
-  line-height: 1.3 !important;
-  margin-top: 1.5rem !important;
-  margin-bottom: 0.75rem !important;
-}
-
-.wmde-markdown h3,
-.wmde-markdown-preview h3,
-.markdown-body h3,
-.markdown-preview h3 {
-  color: var(--markdown-text) !important;
-  font-family: var(--font-sans) !important;
-  font-size: 0.875rem !important; /* text-sm - Secondary text, captions (same as body) */
-  font-weight: 600 !important;
-  letter-spacing: var(--tracking-normal) !important;
-  line-height: 1.3 !important;
-  margin-top: 1.5rem !important;
-  margin-bottom: 0.75rem !important;
-}
-
-.wmde-markdown h4,
-.wmde-markdown-preview h4,
-.markdown-body h4,
-.markdown-preview h4,
-.wmde-markdown h5,
-.wmde-markdown-preview h5,
-.markdown-body h5,
-.markdown-preview h5,
-.wmde-markdown h6,
-.wmde-markdown-preview h6,
-.markdown-body h6,
-.markdown-preview h6 {
-  color: var(--markdown-text) !important;
-  font-family: var(--font-sans) !important;
-  font-size: 0.875rem !important; /* text-sm - Secondary text, captions */
-  font-weight: 600 !important;
-  letter-spacing: var(--tracking-normal) !important;
-  line-height: 1.3 !important;
-  margin-top: 1.5rem !important;
-  margin-bottom: 0.75rem !important;
-}
-
-/* Text elements */
-.wmde-markdown p,
-.wmde-markdown-preview p,
-.markdown-body p,
-.markdown-preview p {
-  color: var(--markdown-text) !important;
-  font-family: var(--font-sans) !important;
-  letter-spacing: var(--tracking-normal) !important;
-  line-height: 1.7 !important;
-  margin-top: 0 !important;
+.markdown-body h2 {
+  color: var(--md-text) !important;
+  font-size: 1.125rem !important;
+  font-weight: 500 !important;
+  margin-top: 2rem !important;
   margin-bottom: 1rem !important;
 }
 
-.wmde-markdown li,
-.wmde-markdown-preview li,
-.markdown-body li,
-.markdown-preview li {
-  color: var(--markdown-text) !important;
-  font-family: var(--font-sans) !important;
-  letter-spacing: var(--tracking-normal) !important;
-  line-height: 1.7 !important;
-  margin-top: 0.25rem !important;
-  margin-bottom: 0.25rem !important;
+.wmde-markdown h3,
+.markdown-body h3 {
+  color: var(--md-text) !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 1rem !important;
 }
 
-.wmde-markdown strong,
-.wmde-markdown-preview strong,
-.markdown-body strong,
-.markdown-preview strong {
-  color: var(--markdown-text) !important;
-  font-weight: 600 !important;
+.wmde-markdown h4,
+.wmde-markdown h5,
+.wmde-markdown h6,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  color: var(--md-text) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 1rem !important;
 }
 
-.wmde-markdown em,
-.wmde-markdown-preview em,
-.markdown-body em,
-.markdown-preview em {
-  color: var(--markdown-text) !important;
-  font-style: italic !important;
+/* Paragraphs */
+.wmde-markdown p,
+.markdown-body p {
+  color: var(--md-text) !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 1.25rem !important;
+  line-height: 1.75 !important;
+}
+
+.wmde-markdown p:first-child,
+.markdown-body p:first-child {
+  margin-top: 0 !important;
+}
+
+.wmde-markdown p:last-child,
+.markdown-body p:last-child {
+  margin-bottom: 0 !important;
 }
 
 /* Links */
 .wmde-markdown a,
-.wmde-markdown-preview a,
-.markdown-body a,
-.markdown-preview a {
-  color: hsl(var(--primary)) !important;
-  font-family: var(--font-sans) !important;
+.markdown-body a {
+  color: var(--md-primary) !important;
   font-weight: 500 !important;
-  text-decoration: none !important;
-  border-radius: var(--radius-sm) !important;
-  transition: all 150ms ease !important;
-}
-
-.wmde-markdown a:hover,
-.wmde-markdown-preview a:hover,
-.markdown-body a:hover,
-.markdown-preview a:hover {
-  color: hsl(var(--primary)) !important;
-  background-color: hsl(var(--primary) / 0.1) !important;
-  text-decoration: none !important;
+  text-decoration: underline !important;
+  text-underline-offset: 4px !important;
 }
 
 /* Blockquotes */
 .wmde-markdown blockquote,
-.wmde-markdown-preview blockquote,
-.markdown-body blockquote,
-.markdown-preview blockquote {
-  border-left: 4px solid hsl(var(--primary)) !important;
-  color: hsl(var(--muted-foreground)) !important;
-  background-color: hsl(var(--muted) / 0.5) !important;
-  padding: 1rem 1.5rem !important;
-  margin: 1rem 0 !important;
-  border-radius: 0 var(--radius) var(--radius) 0 !important;
-  font-family: var(--font-sans) !important;
-  letter-spacing: var(--tracking-normal) !important;
-  line-height: 1.7 !important;
-  box-shadow: var(--shadow-xs) !important;
+.markdown-body blockquote {
+  border-left: 2px solid var(--md-primary) !important;
+  padding-left: 1.5rem !important;
+  font-style: italic !important;
+  color: var(--md-text-muted) !important;
+  margin: 1.25rem 0 !important;
+  background: transparent !important;
 }
 
 /* Lists */
 .wmde-markdown ul,
-.wmde-markdown ol,
-.wmde-markdown-preview ul,
-.wmde-markdown-preview ol,
-.markdown-body ul,
-.markdown-body ol,
-.markdown-preview ul,
-.markdown-preview ol {
-  color: var(--markdown-text) !important;
-  font-family: var(--font-sans) !important;
-  letter-spacing: var(--tracking-normal) !important;
-  line-height: 1.7 !important;
-  margin: 1rem 0 !important;
+.markdown-body ul {
+  margin: 1.25rem 0 !important;
   padding-left: 1.5rem !important;
-}
-
-.wmde-markdown ul li,
-.wmde-markdown-preview ul li,
-.markdown-body ul li,
-.markdown-preview ul li {
+  color: var(--md-text) !important;
   list-style-type: disc !important;
+  list-style-position: outside !important;
 }
 
-.wmde-markdown ol li,
-.wmde-markdown-preview ol li,
-.markdown-body ol li,
-.markdown-preview ol li {
+.wmde-markdown ol,
+.markdown-body ol {
+  margin: 1.25rem 0 !important;
+  padding-left: 1.5rem !important;
+  color: var(--md-text) !important;
   list-style-type: decimal !important;
+  list-style-position: outside !important;
+}
+
+.wmde-markdown li,
+.markdown-body li {
+  margin-top: 0.5rem !important;
+  color: var(--md-text) !important;
+  display: list-item !important;
+}
+
+.wmde-markdown ul li::marker,
+.markdown-body ul li::marker {
+  color: var(--md-text-muted) !important;
+}
+
+.wmde-markdown ol li::marker,
+.markdown-body ol li::marker {
+  color: var(--md-text-muted) !important;
 }
 
 /* Horizontal rule */
 .wmde-markdown hr,
-.wmde-markdown-preview hr,
-.markdown-body hr,
-.markdown-preview hr {
+.markdown-body hr {
   border: none !important;
-  height: 1px !important;
-  background: linear-gradient(
-    to right,
-    transparent,
-    hsl(var(--border) / 0.5),
-    transparent
-  ) !important;
-  margin: 2rem 0 !important;
+  border-bottom: 1px solid var(--md-border) !important;
   opacity: 0.6 !important;
+  margin: 1.25rem 0 !important;
 }
 
-/* Remove any other background overrides */
-.wmde-markdown *,
-.wmde-markdown-preview *,
-.markdown-body *,
-.markdown-preview * {
+/* Tables - matching STYLE.md with subtle styling */
+.wmde-markdown table,
+.markdown-body table {
+  width: fit-content !important;
+  max-width: 100% !important;
+  margin: 1.25rem 0 !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+  border: 1px solid var(--md-border) !important;
+  table-layout: auto !important;
+  display: table !important;
+}
+
+.wmde-markdown thead,
+.markdown-body thead {
+  background-color: var(--md-muted-bg) !important;
+  display: table-header-group !important;
+}
+
+.wmde-markdown tbody,
+.markdown-body tbody {
+  display: table-row-group !important;
+}
+
+.wmde-markdown th,
+.markdown-body th {
+  background-color: var(--md-muted-bg) !important;
+  color: var(--md-text-muted) !important;
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 0.75rem 1rem !important;
+  text-align: left !important;
+  border-bottom: 1px solid var(--md-border) !important;
+  white-space: nowrap !important;
+  display: table-cell !important;
+}
+
+/* Hide empty table cells */
+.wmde-markdown th:empty,
+.markdown-body th:empty,
+.wmde-markdown td:empty,
+.markdown-body td:empty {
+  display: none !important;
+  padding: 0 !important;
+  width: 0 !important;
+}
+
+.wmde-markdown td,
+.markdown-body td {
   background-color: transparent !important;
+  color: var(--md-text) !important;
+  padding: 0.75rem 1rem !important;
+  border-bottom: 1px solid var(--md-border) !important;
+  font-size: 0.875rem !important;
+  display: table-cell !important;
 }
 
-/* Ensure text visibility */
-.wmde-markdown,
-.wmde-markdown-preview,
-.markdown-body,
-.markdown-preview {
-  color-scheme: light dark !important;
+.wmde-markdown tr,
+.markdown-body tr {
+  background-color: transparent !important;
+  display: table-row !important;
+}
+
+/* Code blocks */
+.wmde-markdown pre,
+.markdown-body pre {
+  background-color: var(--md-muted-bg) !important;
+  border: 1px solid var(--md-border) !important;
+  border-radius: 0.75rem !important;
+  padding: 1rem !important;
+  overflow-x: auto !important;
+  margin: 1.25rem 0 !important;
+}
+
+.wmde-markdown code,
+.markdown-body code {
+  font-family: "JetBrains Mono", monospace !important;
+  font-size: 0.875rem !important;
+  background-color: var(--md-muted-bg) !important;
+  border: 1px solid var(--md-border) !important;
+  border-radius: 0.375rem !important;
+  padding: 0.125rem 0.375rem !important;
+  color: var(--md-text) !important;
+}
+
+.wmde-markdown pre code,
+.markdown-body pre code {
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Strong and emphasis */
+.wmde-markdown strong,
+.markdown-body strong {
+  color: var(--md-text) !important;
+  font-weight: 600 !important;
+}
+
+.wmde-markdown em,
+.markdown-body em {
+  color: var(--md-text) !important;
+  font-style: italic !important;
+}
+
+/* Override any background colors set by the library */
+.wmde-markdown *,
+.markdown-body * {
+  border-color: var(--md-border) !important;
+}
+
+/* Ensure transparent backgrounds */
+[data-color-mode="light"] .wmde-markdown,
+[data-color-mode="dark"] .wmde-markdown,
+[data-color-mode="light"] .markdown-body,
+[data-color-mode="dark"] .markdown-body {
+  background-color: transparent !important;
 }

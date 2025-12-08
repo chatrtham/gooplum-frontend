@@ -113,7 +113,7 @@ export interface PaginatedFlowRuns {
 export interface PaginatedFlows {
   flows: FlowInfo[];
   total: number;
-  page: number;
+  offset: number;
   limit: number;
 }
 
@@ -151,20 +151,20 @@ class FlowsAPI {
 
   // Get paginated flows
   async getFlows(
-    page: number = 1,
+    offset: number = 0,
     limit: number = 12,
   ): Promise<PaginatedFlows> {
     const response = await fetch(
-      `${BASE_URL}/flows/?page=${page}&limit=${limit}`,
+      `${BASE_URL}/flows/?offset=${offset}&limit=${limit}`,
     );
     const paginatedFlows = await this.handleResponse<PaginatedFlows>(response);
     return paginatedFlows;
   }
 
   // Helper to get flows transformed to Flow[] for backwards compatibility
-  async getFlowsList(page: number = 1, limit: number = 12): Promise<Flow[]> {
+  async getFlowsList(offset: number = 0, limit: number = 12): Promise<Flow[]> {
     try {
-      const paginatedFlows = await this.getFlows(page, limit);
+      const paginatedFlows = await this.getFlows(offset, limit);
       return paginatedFlows.flows.map(transformFlowInfo);
     } catch (error) {
       console.error("Failed to fetch flows:", error);

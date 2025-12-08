@@ -2,8 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, ArrowLeftIcon } from "lucide-react";
+import {
+  RefreshCwIcon,
+  ArrowLeftIcon,
+  BotIcon,
+  WrenchIcon,
+  TrashIcon,
+  AlertTriangleIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { AgentChat } from "@/components/agents/AgentChat";
 import { AgentThreadList } from "@/components/agents/AgentThreadList";
 import { AgentConfigPanel } from "@/components/agents/AgentConfigPanel";
@@ -11,6 +26,7 @@ import {
   getAssistant,
   createAssistantFromParams,
   updateAssistantFromParams,
+  deleteAssistant,
 } from "@/lib/agentsApi";
 import type { Assistant, AssistantThread } from "@/types/agents";
 import type { LangChainMessage } from "@assistant-ui/react-langgraph";
@@ -40,6 +56,9 @@ export default function AgentDetailPage() {
     threadId: string;
     preview: string;
   } | null>(null);
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Handler for when a thread is selected from the list
   const handleSelectThread = (thread: AssistantThread) => {
@@ -108,17 +127,35 @@ export default function AgentDetailPage() {
     fetchAssistant();
   }, [assistantId, isNewAgent]);
 
+  const handleDelete = async () => {
+    if (!assistant || isNewAgent) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteAssistant(assistant.assistant_id);
+      router.push("/agents");
+    } catch (err) {
+      console.error("Failed to delete agent:", err);
+      alert(
+        `Failed to delete agent: ${err instanceof Error ? err.message : "Unknown error"}`,
+      );
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="size-8 animate-spin text-primary" />
+      <div className="flex h-full items-center justify-center">
+        <RefreshCwIcon className="size-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!isNewAgent && !assistant) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4">
+      <div className="flex h-full flex-col items-center justify-center gap-4">
         <p className="text-lg font-medium">Agent not found</p>
         <Link href="/agents">
           <Button>Back to Agents</Button>
@@ -128,85 +165,153 @@ export default function AgentDetailPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-full flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-card px-4">
-        <div className="flex items-center gap-4">
-          <Link href="/agents">
-            <Button variant="ghost" size="icon" className="size-8">
-              <ArrowLeftIcon className="size-4" />
-            </Button>
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/60 bg-card/50 px-4 shadow-sm backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/agents"
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-all duration-150 ease-out hover:text-foreground active:scale-[0.98]"
+          >
+            <ArrowLeftIcon className="size-4" />
+            Back
           </Link>
-          <div>
-            <h1 className="text-lg font-semibold">
-              {isNewAgent ? "Create New Agent" : assistant?.name}
-            </h1>
-            {!isNewAgent && (
-              <p className="text-xs text-muted-foreground">
-                {assistant?.config.configurable.model_preset}
-              </p>
-            )}
+          <div className="h-4 w-px bg-border/60" />
+          <div className="flex items-center gap-2">
+            <div className="flex size-6 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <BotIcon className="size-3.5" />
+            </div>
+            <div>
+              <h1 className="text-sm leading-none font-semibold tracking-tight">
+                {isNewAgent ? "Create New Agent" : assistant?.name}
+              </h1>
+              {!isNewAgent && (
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
+                  {assistant?.config.configurable.model_preset}
+                </p>
+              )}
+            </div>
           </div>
         </div>
+        {!isNewAgent && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDeleteDialogOpen(true)}
+            className="h-8 cursor-pointer text-xs font-medium text-muted-foreground transition-all duration-150 ease-out hover:text-destructive active:scale-[0.98]"
+          >
+            <TrashIcon className="mr-1.5 size-3.5" />
+            Delete Agent
+          </Button>
+        )}
       </header>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                <AlertTriangleIcon className="size-5 text-destructive" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-semibold tracking-tight">
+                  Delete Agent
+                </DialogTitle>
+                <DialogDescription className="mt-1 text-sm font-normal">
+                  Are you sure you want to delete{" "}
+                  <span className="font-medium text-foreground">
+                    "{assistant?.name}"
+                  </span>
+                  ? This action cannot be undone.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={isDeleting}
+              className="flex-1 cursor-pointer transition-all duration-150 ease-out active:scale-[0.98] sm:flex-none"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="flex-1 cursor-pointer transition-all duration-150 ease-out active:scale-[0.98] sm:flex-none"
+            >
+              {isDeleting ? (
+                <>
+                  <RefreshCwIcon className="mr-1.5 size-3.5 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Agent"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Main Content - 3 Panel Layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Panel: Thread List (Hidden for new agents) */}
-        <div
-          className={`flex w-64 flex-col border-r bg-muted/10 ${isNewAgent ? "pointer-events-none opacity-50 grayscale" : ""}`}
-        >
-          {!isNewAgent && (
-            <AgentThreadList
-              assistantId={assistantId}
-              currentThreadId={currentThreadId}
-              onSelectThread={handleSelectThread}
-              onCreateThread={handleCreateThread}
-              refreshKey={threadListRefreshKey}
-              newThread={newThread}
-            />
-          )}
-          {isNewAgent && (
-            <div className="flex flex-1 items-center justify-center p-4 text-center text-sm text-muted-foreground">
-              Save agent to start chatting
+        {isNewAgent ? (
+          <div className="flex-1 overflow-y-auto bg-muted/20 p-6">
+            <div className="mx-auto max-w-3xl">
+              <AgentConfigPanel
+                initialData={assistant || undefined}
+                isEditing={!isNewAgent}
+                onSave={handleSaveAgent}
+                variant="full-page"
+              />
             </div>
-          )}
-        </div>
-
-        {/* Center Panel: Chat Area (Hidden for new agents) */}
-        <div
-          className={`flex flex-1 flex-col ${isNewAgent ? "pointer-events-none bg-muted/5 opacity-50 grayscale" : ""}`}
-        >
-          {!isNewAgent ? (
-            <AgentChat
-              key={chatKey}
-              assistantId={assistantId}
-              threadId={currentThreadId}
-              initialMessages={initialMessages}
-              onThreadCreated={handleThreadCreated}
-              onStreamingComplete={handleStreamingComplete}
-            />
-          ) : (
-            <div className="flex flex-1 items-center justify-center p-8 text-center text-muted-foreground">
-              <div className="max-w-md space-y-2">
-                <h3 className="text-lg font-medium">Configure your agent</h3>
-                <p>
-                  Use the panel on the right to set up your agent's name, model,
-                  and tools before you can start testing it.
-                </p>
+          </div>
+        ) : (
+          <>
+            {/* Left Panel: Thread List */}
+            <div className="w-72 bg-muted/20 p-3">
+              <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/50 shadow-sm backdrop-blur-md dark:bg-card/40">
+                <div className="flex-1 overflow-hidden">
+                  <AgentThreadList
+                    assistantId={assistantId}
+                    currentThreadId={currentThreadId}
+                    onSelectThread={handleSelectThread}
+                    onCreateThread={handleCreateThread}
+                    refreshKey={threadListRefreshKey}
+                    newThread={newThread}
+                  />
+                </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Right Panel: Configuration (Always visible) */}
-        <div className="flex w-[350px] shrink-0 flex-col border-l bg-background">
-          <AgentConfigPanel
-            initialData={assistant || undefined}
-            isEditing={!isNewAgent}
-            onSave={handleSaveAgent}
-          />
-        </div>
+            {/* Center Panel: Chat Area */}
+            <div className="flex flex-1 flex-col bg-muted/20">
+              <AgentChat
+                key={chatKey}
+                assistantId={assistantId}
+                threadId={currentThreadId}
+                initialMessages={initialMessages}
+                onThreadCreated={handleThreadCreated}
+                onStreamingComplete={handleStreamingComplete}
+              />
+            </div>
+
+            {/* Right Panel: Configuration */}
+            <div className="w-[400px] shrink-0 bg-muted/20 p-3">
+              <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/50 shadow-sm backdrop-blur-md dark:bg-card/40">
+                <AgentConfigPanel
+                  initialData={assistant || undefined}
+                  isEditing={!isNewAgent}
+                  onSave={handleSaveAgent}
+                  variant="sidebar"
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

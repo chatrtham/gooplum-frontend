@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusIcon, ClockIcon } from "lucide-react";
+import { PlusIcon, ClockIcon, RefreshCwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAssistantThreads } from "@/lib/agentChatApi";
 import type { AssistantThread } from "@/types/agents";
@@ -66,26 +66,26 @@ export function AgentThreadList({
   }, [newThread, assistantId]);
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-border bg-card">
-      <div className="border-b border-border p-4">
+    <div className="flex h-full w-full flex-col bg-transparent">
+      <div className="p-4 pb-3">
         <Button
           onClick={onCreateThread}
-          className="w-full justify-start gap-2"
-          variant="outline"
+          className="w-full justify-start gap-2 shadow-sm"
+          variant="default"
         >
           <PlusIcon className="size-4" />
           New Chat
         </Button>
       </div>
 
-      <div className="flex-1 space-y-1 overflow-y-auto p-2">
+      <div className="flex-1 space-y-1 overflow-y-auto p-3">
         {loading && threads.length === 0 ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            Loading...
+          <div className="flex flex-col items-center justify-center py-8 text-center text-sm text-muted-foreground">
+            <RefreshCwIcon className="size-4 animate-spin text-primary" />
           </div>
         ) : threads.length === 0 ? (
-          <div className="p-4 text-center text-sm text-muted-foreground">
-            No history yet
+          <div className="flex flex-col items-center justify-center py-12 text-center text-sm text-muted-foreground">
+            <p>No chat history yet</p>
           </div>
         ) : (
           threads.map((thread) => (
@@ -93,14 +93,14 @@ export function AgentThreadList({
               key={thread.thread_id}
               onClick={() => onSelectThread(thread)}
               className={cn(
-                "flex w-full flex-col items-start gap-1 rounded-md p-3 text-left text-sm transition-colors hover:bg-accent/50",
+                "flex w-full cursor-pointer flex-col items-start gap-1.5 rounded-xl p-3 text-left text-sm transition-all duration-150 ease-out",
                 currentThreadId === thread.thread_id
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground",
+                  ? "border border-secondary/30 bg-secondary/20 font-medium text-secondary"
+                  : "text-muted-foreground hover:bg-secondary/10 hover:text-secondary",
               )}
             >
               <div className="flex w-full items-center justify-between">
-                <span className="line-clamp-1 font-medium text-foreground">
+                <span className="line-clamp-1 font-medium">
                   {thread.preview || "New conversation"}
                 </span>
               </div>
