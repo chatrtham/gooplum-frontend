@@ -66,9 +66,8 @@ export function AgentCard({ assistant }: AgentCardProps) {
           </CardHeader>
           <CardContent className="flex-1 space-y-4 pb-3">
             <CardDescription className="line-clamp-2 min-h-[2.5rem] text-sm leading-relaxed font-normal break-words">
-              {config.system_prompt?.slice(0, 100) ||
-                "No description provided."}
-              {config.system_prompt && config.system_prompt.length > 100
+              {config.instructions?.slice(0, 100) || "No description provided."}
+              {config.instructions && config.instructions.length > 100
                 ? "..."
                 : ""}
             </CardDescription>

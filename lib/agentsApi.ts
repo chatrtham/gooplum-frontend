@@ -83,7 +83,7 @@ export async function createAssistant(
 export async function createAssistantFromParams(params: {
   name: string;
   model_preset: string;
-  system_prompt: string;
+  instructions: string;
   flow_tool_ids?: string[];
   gumcp_services?: string[];
 }): Promise<Assistant> {
@@ -92,7 +92,7 @@ export async function createAssistantFromParams(params: {
     config: {
       configurable: {
         model_preset: params.model_preset,
-        system_prompt: params.system_prompt,
+        instructions: params.instructions,
         flow_tool_ids: params.flow_tool_ids || [],
         gumcp_services: params.gumcp_services || [],
       },
@@ -126,7 +126,7 @@ export async function updateAssistantFromParams(
   params: {
     name?: string;
     model_preset?: string;
-    system_prompt?: string;
+    instructions?: string;
     flow_tool_ids?: string[];
     gumcp_services?: string[];
   },
@@ -137,7 +137,7 @@ export async function updateAssistantFromParams(
 
   const newConfigurable: AssistantConfigurable = {
     model_preset: params.model_preset ?? currentConfig.model_preset,
-    system_prompt: params.system_prompt ?? currentConfig.system_prompt,
+    instructions: params.instructions ?? currentConfig.instructions,
     flow_tool_ids: params.flow_tool_ids ?? currentConfig.flow_tool_ids ?? [],
     gumcp_services: params.gumcp_services ?? currentConfig.gumcp_services ?? [],
   };

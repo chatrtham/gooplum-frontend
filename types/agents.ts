@@ -11,7 +11,7 @@
  */
 export interface AssistantConfigurable {
   model_preset: string;
-  system_prompt: string;
+  instructions: string;
   flow_tool_ids?: string[];
   gumcp_services?: string[];
 }

@@ -33,7 +33,7 @@ interface AgentConfigPanelProps {
   onSave: (data: {
     name: string;
     model_preset: string;
-    system_prompt: string;
+    instructions: string;
     flow_tool_ids: string[];
     gumcp_services: string[];
   }) => Promise<void>;
@@ -56,7 +56,7 @@ export function AgentConfigPanel({
   // Form state
   const [name, setName] = useState(initialData?.name || "");
   const [systemPrompt, setSystemPrompt] = useState(
-    initialConfig?.system_prompt || "",
+    initialConfig?.instructions || "",
   );
   const [modelPreset, setModelPreset] = useState(
     initialConfig?.model_preset || "",
@@ -116,7 +116,7 @@ export function AgentConfigPanel({
 
     const isNameChanged = name !== (initialData?.name || "");
     const isPromptChanged =
-      systemPrompt !== (initialConfig?.system_prompt || "");
+      systemPrompt !== (initialConfig?.instructions || "");
     const isModelChanged = modelPreset !== (initialConfig?.model_preset || "");
 
     // Simple array comparison (assuming order doesn't matter but for simplicity checking length and inclusion)
@@ -169,7 +169,7 @@ export function AgentConfigPanel({
       await onSave({
         name,
         model_preset: modelPreset,
-        system_prompt: systemPrompt,
+        instructions: systemPrompt,
         flow_tool_ids: selectedFlowIds,
         gumcp_services: selectedServices,
       });

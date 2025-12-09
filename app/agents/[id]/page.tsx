@@ -95,7 +95,7 @@ export default function AgentDetailPage() {
   const handleSaveAgent = async (data: {
     name: string;
     model_preset: string;
-    system_prompt: string;
+    instructions: string;
     flow_tool_ids: string[];
     gumcp_services: string[];
   }) => {
