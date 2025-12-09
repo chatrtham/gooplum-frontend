@@ -339,11 +339,11 @@ export function AgentConfigPanel({
               />
               <div className="flex flex-col gap-0.5">
                 <span className="text-sm font-medium">
-                  Learn from conversations
+                  Auto Improve Instructions
                 </span>
                 <span className="text-xs text-muted-foreground">
                   Instructions will automatically improve based on your
-                  feedback.
+                  interactions with the agent.
                 </span>
               </div>
             </label>
@@ -553,10 +553,11 @@ export function AgentConfigPanel({
             />
             <div className="flex flex-col gap-0.5">
               <span className="text-sm font-medium">
-                Learn from conversations
+                Auto Improve Instructions
               </span>
               <span className="text-xs text-muted-foreground">
-                Instructions will automatically improve based on your feedback.
+                Instructions will automatically improve based on your
+                interactions with the agent.
               </span>
             </div>
           </label>
