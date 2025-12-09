@@ -2,6 +2,7 @@
 
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import { CheckIcon } from "lucide-react";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 
 /**
  * AskUserToolUI displays the ask_user tool call after execution.
@@ -42,26 +43,38 @@ export const AskUserToolUI: ToolCallMessagePartComponent<
     .filter(Boolean);
 
   return (
-    <div className="mb-4 flex w-full flex-col gap-3 rounded-xl border border-border bg-card py-4 shadow-sm">
+    <div className="mb-4 flex w-full flex-col gap-6 rounded-xl border border-border/60 bg-card/50 py-6 shadow-sm backdrop-blur-md">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5">
-        <div className="flex size-6 items-center justify-center rounded-full bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400">
+      <div className="flex items-center gap-3 px-6">
+        <div className="flex size-6 items-center justify-center rounded-full bg-green-500/10 text-green-600 dark:text-green-400">
           <CheckIcon className="size-3.5" />
         </div>
-        <p className="text-sm font-semibold text-foreground">
+        <p className="text-sm font-medium tracking-tight text-foreground">
           Questions answered
         </p>
       </div>
 
       {/* Questions and Answers */}
-      <div className="flex flex-col gap-4 border-t border-border/50 pt-4">
+      <div className="flex flex-col gap-6 px-6">
         {questions.map((q: QuestionItem, idx: number) => (
-          <div key={idx} className="flex flex-col gap-2 px-5">
-            <p className="text-sm font-medium text-muted-foreground">
-              {idx + 1}. {q.question.replace(/\\n/g, "\n")}
-            </p>
+          <div key={idx} className="flex flex-col gap-2">
+            <div className="flex gap-2 text-sm font-normal text-muted-foreground">
+              <span className="shrink-0">{idx + 1}.</span>
+              <MarkdownPreview
+                source={q.question.replace(/\\n/g, "\n")}
+                style={{
+                  backgroundColor: "transparent",
+                  color: "inherit",
+                  fontSize: "inherit",
+                }}
+                wrapperElement={{
+                  "data-color-mode": "light",
+                }}
+                className="prose dark:prose-invert max-w-none !bg-transparent !text-inherit [&>p]:mb-2 [&>p:last-child]:mb-0"
+              />
+            </div>
             {answers[idx] && (
-              <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-foreground shadow-sm">
+              <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2 font-mono text-sm text-foreground/90">
                 {answers[idx].replace(/\\n/g, "\n")}
               </div>
             )}

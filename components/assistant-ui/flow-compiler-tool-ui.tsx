@@ -70,31 +70,36 @@ export const FlowCompilerToolUI: ToolCallMessagePartComponent<
   };
 
   return (
-    <div className="mb-4 flex w-full flex-col gap-4 rounded-xl border border-border bg-card py-5 shadow-sm">
+    <div className="group relative mb-4 flex w-full flex-col overflow-hidden rounded-xl border border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-all duration-300 hover:shadow-md">
       {/* Header */}
-      <div className="flex items-center gap-3 px-5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+      <div className="flex items-center gap-3 px-6 pt-6 pb-2">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20">
           <Sparkles className="size-4" />
         </div>
-        <p className="text-base font-semibold">Flow Ready</p>
+        <div className="flex flex-col">
+          <p className="font-sans text-base font-medium tracking-tight text-foreground">
+            Flow Generated
+          </p>
+          <p className="text-xs text-muted-foreground">Ready to be activated</p>
+        </div>
       </div>
 
       {/* Flow Info */}
-      <div className="flex flex-col gap-3 border-t border-border/50 px-5 pt-4">
-        <div className="flex flex-col gap-1">
-          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            Name
+      <div className="flex flex-col gap-5 px-6 py-4">
+        <div className="grid gap-1.5">
+          <p className="text-[10px] font-medium tracking-wider text-muted-foreground/70 uppercase">
+            Flow Name
           </p>
-          <p className="font-medium text-foreground">
+          <p className="font-sans text-sm font-medium text-foreground">
             {toNormalCase(flow_name)}
           </p>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+        <div className="grid gap-1.5">
+          <p className="text-[10px] font-medium tracking-wider text-muted-foreground/70 uppercase">
             Description
           </p>
-          <p className="text-sm leading-relaxed text-foreground">
+          <p className="font-sans text-sm leading-relaxed text-foreground/90">
             {flow_description}
           </p>
         </div>
@@ -102,7 +107,7 @@ export const FlowCompilerToolUI: ToolCallMessagePartComponent<
 
       {/* Explanation */}
       {flow_explanation && (
-        <div className="flex flex-col border-t border-border/50 px-5 pt-4">
+        <div className="border-t border-border/40 px-2 py-2">
           <button
             onClick={() => {
               if (!isExplanationOpen) {
@@ -119,17 +124,17 @@ export const FlowCompilerToolUI: ToolCallMessagePartComponent<
                 setIsExplanationOpen(false);
               }
             }}
-            className="group flex w-full cursor-pointer items-center justify-between rounded-lg border border-border/40 bg-card px-4 py-2.5 text-sm font-medium text-foreground/70 shadow-sm transition-all duration-150 hover:border-border hover:bg-muted/30 hover:text-foreground hover:shadow"
+            className="group/btn flex w-full cursor-pointer items-center justify-between rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted/50 hover:text-foreground"
           >
-            <span>How it works</span>
+            <span className="flex items-center gap-2">How it works</span>
             {isExplanationOpen ? (
-              <ChevronDown className="size-4 transition-transform duration-150" />
+              <ChevronDown className="size-4 transition-transform duration-200" />
             ) : (
-              <ChevronRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+              <ChevronRight className="size-4 transition-transform duration-200 group-hover/btn:translate-x-0.5" />
             )}
           </button>
           {isExplanationOpen && (
-            <div className="mt-3 px-1">
+            <div className="animate-in fade-in slide-in-from-top-2 mt-2 px-4 pb-4 duration-200">
               <FlowExplanation explanation={flow_explanation} />
             </div>
           )}
@@ -137,12 +142,12 @@ export const FlowCompilerToolUI: ToolCallMessagePartComponent<
       )}
 
       {/* Create Flow Button */}
-      <div className="flex justify-end border-t border-border/50 px-5 pt-4">
+      <div className="flex justify-end border-t border-border/40 bg-muted/20 px-6 py-4">
         <Button
           onClick={handleCreateFlow}
           disabled={isActivating || isActivated}
-          className="gap-2 shadow-sm"
-          size="lg"
+          className="gap-2 font-medium shadow-sm transition-all duration-200 active:scale-[0.98]"
+          size="default"
         >
           {isActivating ? (
             <>
