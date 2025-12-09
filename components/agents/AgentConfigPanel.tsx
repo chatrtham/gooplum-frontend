@@ -43,6 +43,7 @@ interface AgentConfigPanelProps {
     instructions: string;
     flow_tool_ids: string[];
     gumcp_services: string[];
+    can_suggest_improvements: boolean;
   }) => Promise<void>;
   variant?: "sidebar" | "full-page";
 }
@@ -74,11 +75,23 @@ export function AgentConfigPanel({
   const [selectedServices, setSelectedServices] = useState<string[]>(
     initialConfig?.gumcp_services || [],
   );
+  const [canSuggestImprovements, setCanSuggestImprovements] = useState(
+    initialConfig?.can_suggest_improvements || false,
+  );
 
   // Available options
   const [presets, setPresets] = useState<ModelPreset[]>([]);
   const [flows, setFlows] = useState<Flow[]>([]);
   const [services, setServices] = useState<string[]>([]);
+
+  // Sync instructions when they change externally (e.g., auto-update from self-improvement)
+  useEffect(() => {
+    const newInstructions =
+      initialData?.config?.configurable?.instructions || "";
+    if (newInstructions !== systemPrompt && !initializing) {
+      setSystemPrompt(newInstructions);
+    }
+  }, [initialData?.config?.configurable?.instructions]);
 
   // Dialog states
   const [isFlowDialogOpen, setIsFlowDialogOpen] = useState(false);
@@ -137,12 +150,17 @@ export function AgentConfigPanel({
       selectedServices.length !== initialServices.length ||
       !selectedServices.every((s) => initialServices.includes(s));
 
+    const isImprovementsChanged =
+      canSuggestImprovements !==
+      (initialConfig?.can_suggest_improvements || false);
+
     setIsDirty(
       isNameChanged ||
         isPromptChanged ||
         isModelChanged ||
         isFlowsChanged ||
-        isServicesChanged,
+        isServicesChanged ||
+        isImprovementsChanged,
     );
   }, [
     name,
@@ -150,6 +168,7 @@ export function AgentConfigPanel({
     modelPreset,
     selectedFlowIds,
     selectedServices,
+    canSuggestImprovements,
     initialData,
     initialConfig,
     initializing,
@@ -179,6 +198,7 @@ export function AgentConfigPanel({
         instructions: systemPrompt,
         flow_tool_ids: selectedFlowIds,
         gumcp_services: selectedServices,
+        can_suggest_improvements: canSuggestImprovements,
       });
       setIsDirty(false);
     } catch (err) {
@@ -310,6 +330,23 @@ export function AgentConfigPanel({
             <p className="text-xs text-muted-foreground">
               Define how your agent should behave and what it should do.
             </p>
+            <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-lg border border-border/60 bg-muted/30 p-3 transition-colors hover:bg-muted/50">
+              <Checkbox
+                checked={canSuggestImprovements}
+                onCheckedChange={(checked) =>
+                  setCanSuggestImprovements(checked === true)
+                }
+              />
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">
+                  Learn from conversations
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Instructions will automatically improve based on your
+                  feedback.
+                </span>
+              </div>
+            </label>
           </div>
 
           <div className="space-y-4">
@@ -507,6 +544,22 @@ export function AgentConfigPanel({
             placeholder="You are a helpful assistant..."
             className="flex min-h-[200px] w-full resize-y rounded-lg border border-input bg-transparent px-4 py-3 font-mono text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-none"
           />
+          <label className="mt-2 flex cursor-pointer items-center gap-3 rounded-lg border border-border/60 bg-muted/30 p-3 transition-colors hover:bg-muted/50">
+            <Checkbox
+              checked={canSuggestImprovements}
+              onCheckedChange={(checked) =>
+                setCanSuggestImprovements(checked === true)
+              }
+            />
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">
+                Learn from conversations
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Instructions will automatically improve based on your feedback.
+              </span>
+            </div>
+          </label>
         </div>
 
         {/* Tools Section */}

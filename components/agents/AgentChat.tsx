@@ -56,8 +56,53 @@ export function AgentChat({
   async function* wrapStreamWithCompletion(
     stream: AsyncGenerator<any>,
   ): AsyncGenerator<any> {
+    const ignoredRunIds = new Set<string>();
+
     try {
       for await (const chunk of stream) {
+        if (!chunk || typeof chunk !== "object") {
+          yield chunk;
+          continue;
+        }
+
+        // Check for metadata event to identify runs to ignore
+        if (chunk.event === "messages/metadata" && chunk.data) {
+          const newData = { ...chunk.data };
+          let modified = false;
+
+          for (const [runId, runData] of Object.entries(chunk.data)) {
+            const metadata = (runData as any)?.metadata;
+            if (metadata?.tags?.includes("self-improvement")) {
+              ignoredRunIds.add(runId);
+              delete newData[runId];
+              modified = true;
+            }
+          }
+
+          if (modified) {
+            if (Object.keys(newData).length > 0) {
+              yield { ...chunk, data: newData };
+            }
+            continue;
+          }
+        }
+
+        // Filter messages based on ignored run IDs
+        if (
+          (chunk.event === "messages/partial" ||
+            chunk.event === "messages/complete") &&
+          Array.isArray(chunk.data)
+        ) {
+          const filteredData = chunk.data.filter(
+            (msg: any) => !ignoredRunIds.has(msg.id),
+          );
+
+          if (filteredData.length > 0) {
+            yield { ...chunk, data: filteredData };
+          }
+          continue;
+        }
+
         yield chunk;
       }
     } finally {

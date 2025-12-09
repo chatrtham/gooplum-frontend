@@ -9,6 +9,7 @@ import {
   WrenchIcon,
   TrashIcon,
   AlertTriangleIcon,
+  SparklesIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,6 +60,8 @@ export default function AgentDetailPage() {
   // Delete dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // Instruction update notification
+  const [showInstructionUpdate, setShowInstructionUpdate] = useState(false);
 
   // Handler for when a thread is selected from the list
   const handleSelectThread = (thread: AssistantThread) => {
@@ -86,9 +89,29 @@ export default function AgentDetailPage() {
     setNewThread({ threadId, preview: firstMessagePreview });
   };
 
-  // Handler for when streaming completes - refresh the thread list
-  const handleStreamingComplete = () => {
+  // Handler for when streaming completes - refresh the thread list and check for instruction updates
+  const handleStreamingComplete = async () => {
     setThreadListRefreshKey((k) => k + 1);
+
+    // Check if instructions were updated (only if self-improvement is enabled)
+    if (assistant?.config.configurable.can_suggest_improvements) {
+      try {
+        const updated = await getAssistant(assistantId);
+        const oldInstructions =
+          assistant?.config.configurable.instructions || "";
+        const newInstructions = updated.config.configurable.instructions || "";
+
+        if (newInstructions !== oldInstructions) {
+          // Instructions changed! Show notification and update state
+          setAssistant(updated);
+          setShowInstructionUpdate(true);
+          // Auto-dismiss after 4 seconds
+          setTimeout(() => setShowInstructionUpdate(false), 4000);
+        }
+      } catch (err) {
+        console.error("Failed to check for instruction updates:", err);
+      }
+    }
   };
 
   // Handle saving agent configuration
@@ -98,6 +121,7 @@ export default function AgentDetailPage() {
     instructions: string;
     flow_tool_ids: string[];
     gumcp_services: string[];
+    can_suggest_improvements: boolean;
   }) => {
     if (isNewAgent) {
       const newAssistant = await createAssistantFromParams(data);
@@ -288,7 +312,22 @@ export default function AgentDetailPage() {
             </div>
 
             {/* Center Panel: Chat Area */}
-            <div className="flex flex-1 flex-col bg-muted/20">
+            <div className="relative flex flex-1 flex-col bg-muted/20">
+              {/* Instruction Update Notification - Floating */}
+              {showInstructionUpdate && (
+                <div className="animate-in fade-in slide-in-from-top-2 absolute top-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center gap-2 rounded-lg border border-secondary/40 bg-card px-4 py-2.5 text-sm text-secondary shadow-xl duration-300">
+                  <SparklesIcon className="size-4" />
+                  <span>
+                    I&apos;ve updated my instructions based on our chat
+                  </span>
+                  <button
+                    onClick={() => setShowInstructionUpdate(false)}
+                    className="ml-auto cursor-pointer text-xs text-secondary/70 hover:text-secondary"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
               <AgentChat
                 key={chatKey}
                 assistantId={assistantId}

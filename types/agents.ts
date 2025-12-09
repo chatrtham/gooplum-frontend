@@ -14,6 +14,7 @@ export interface AssistantConfigurable {
   instructions: string;
   flow_tool_ids?: string[];
   gumcp_services?: string[];
+  can_suggest_improvements?: boolean;
 }
 
 /**

@@ -86,6 +86,7 @@ export async function createAssistantFromParams(params: {
   instructions: string;
   flow_tool_ids?: string[];
   gumcp_services?: string[];
+  can_suggest_improvements?: boolean;
 }): Promise<Assistant> {
   return createAssistant({
     name: params.name,
@@ -95,6 +96,7 @@ export async function createAssistantFromParams(params: {
         instructions: params.instructions,
         flow_tool_ids: params.flow_tool_ids || [],
         gumcp_services: params.gumcp_services || [],
+        can_suggest_improvements: params.can_suggest_improvements || false,
       },
     },
   });
@@ -129,6 +131,7 @@ export async function updateAssistantFromParams(
     instructions?: string;
     flow_tool_ids?: string[];
     gumcp_services?: string[];
+    can_suggest_improvements?: boolean;
   },
 ): Promise<Assistant> {
   // First get the current assistant to preserve existing config
@@ -140,6 +143,10 @@ export async function updateAssistantFromParams(
     instructions: params.instructions ?? currentConfig.instructions,
     flow_tool_ids: params.flow_tool_ids ?? currentConfig.flow_tool_ids ?? [],
     gumcp_services: params.gumcp_services ?? currentConfig.gumcp_services ?? [],
+    can_suggest_improvements:
+      params.can_suggest_improvements ??
+      currentConfig.can_suggest_improvements ??
+      false,
   };
 
   return updateAssistant(assistantId, {
