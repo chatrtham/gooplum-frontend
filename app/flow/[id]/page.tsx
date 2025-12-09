@@ -413,7 +413,7 @@ export default function FlowDetailsPage() {
                         htmlFor={key}
                         className="text-xs font-normal tracking-wider text-muted-foreground uppercase"
                       >
-                        {key}
+                        {toNormalCase(key)}
                         {param.required && (
                           <span className="ml-0.5 text-destructive">*</span>
                         )}
@@ -442,7 +442,13 @@ export default function FlowDetailsPage() {
                               ? "number"
                               : "text"
                           }
-                          placeholder={`Enter ${key}...`}
+                          placeholder={
+                            param.type === "array"
+                              ? `e.g., ["item1", "item2"]`
+                              : param.type === "object"
+                                ? `e.g., {"key": "value"}`
+                                : `Enter ${key}...`
+                          }
                           value={formData[key] || ""}
                           onChange={(e) =>
                             handleInputChange(key, e.target.value)
