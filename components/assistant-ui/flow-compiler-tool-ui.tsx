@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { FlowExplanation } from "@/components/flows/FlowExplanation";
+import { toNormalCase } from "@/lib/utils";
 
 // Expected artifact structure from flow_compiler tool
 interface FlowCompilerArtifact {
@@ -84,7 +85,9 @@ export const FlowCompilerToolUI: ToolCallMessagePartComponent<
           <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
             Name
           </p>
-          <p className="font-medium text-foreground">{flow_name}</p>
+          <p className="font-medium text-foreground">
+            {toNormalCase(flow_name)}
+          </p>
         </div>
 
         <div className="flex flex-col gap-1">

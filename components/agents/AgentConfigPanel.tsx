@@ -33,6 +33,7 @@ import { getModelPresets, getGumcpServices } from "@/lib/agentsApi";
 import { flowsAPI } from "@/lib/flowsApi";
 import type { Assistant, ModelPreset } from "@/types/agents";
 import type { Flow } from "@/lib/flowsApi";
+import { toNormalCase } from "@/lib/utils";
 
 interface AgentConfigPanelProps {
   initialData?: Assistant;
@@ -388,7 +389,7 @@ export function AgentConfigPanel({
                           />
                           <div className="grid gap-0.5">
                             <span className="text-sm leading-none font-medium">
-                              {flow.name}
+                              {toNormalCase(flow.name)}
                             </span>
                             <p className="line-clamp-2 text-xs text-muted-foreground">
                               {flow.description}
@@ -575,7 +576,7 @@ export function AgentConfigPanel({
                     key={id}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary shadow-sm dark:border-primary/20 dark:bg-primary/10 dark:text-primary"
                   >
-                    Flow: {flow?.name || id}
+                    Flow: {flow?.name ? toNormalCase(flow.name) : id}
                     <button
                       onClick={() => removeFlow(id)}
                       className="ml-1 cursor-pointer rounded-full p-0.5 hover:bg-primary/20 hover:text-primary dark:hover:bg-primary/20 dark:hover:text-primary"
@@ -647,7 +648,7 @@ export function AgentConfigPanel({
                           />
                           <div className="grid gap-1">
                             <span className="text-sm leading-none font-medium tracking-tight text-foreground/90">
-                              {flow.name}
+                              {toNormalCase(flow.name)}
                             </span>
                             <p className="line-clamp-2 text-xs text-muted-foreground">
                               {flow.description}

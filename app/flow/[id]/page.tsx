@@ -42,7 +42,7 @@ import {
 import { RunHistoryList } from "@/components/flows/RunHistoryList";
 import { FlowExplanation } from "@/components/flows/FlowExplanation";
 import { RunDetails } from "@/components/flows/RunDetails";
-import { cn } from "@/lib/utils";
+import { cn, toNormalCase } from "@/lib/utils";
 
 interface FlowExecutionState {
   isExecuting: boolean;
@@ -327,7 +327,7 @@ export default function FlowDetailsPage() {
               <WorkflowIcon className="size-3.5" />
             </div>
             <h1 className="text-sm font-semibold tracking-tight">
-              {flowSchema.name}
+              {toNormalCase(flowSchema.name)}
             </h1>
           </div>
         </div>
@@ -357,7 +357,7 @@ export default function FlowDetailsPage() {
                 <DialogDescription className="mt-1 text-sm font-normal">
                   Are you sure you want to delete{" "}
                   <span className="font-medium text-foreground">
-                    "{flowSchema.name}"
+                    "{toNormalCase(flowSchema.name)}"
                   </span>
                   ? This action cannot be undone.
                 </DialogDescription>

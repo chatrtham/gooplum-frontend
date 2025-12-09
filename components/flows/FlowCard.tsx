@@ -16,6 +16,7 @@ import {
 import { ClockIcon, ArrowRightIcon, WorkflowIcon } from "lucide-react";
 import Link from "next/link";
 import { Flow } from "@/lib/flowsApi";
+import { toNormalCase } from "@/lib/utils";
 
 interface FlowCardProps {
   flow: Flow;
@@ -43,13 +44,13 @@ export function FlowCard({ flow }: FlowCardProps) {
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <CardTitle className="mt-4 truncate font-mono text-base leading-tight font-medium tracking-tight transition-colors group-hover:text-primary">
-                  {flow.name}
+                <CardTitle className="mt-4 truncate text-base leading-tight font-medium tracking-tight transition-colors group-hover:text-primary">
+                  {toNormalCase(flow.name)}
                 </CardTitle>
               </TooltipTrigger>
               {flow.name.length > 40 && (
                 <TooltipContent side="top" className="max-w-xs">
-                  <p className="font-mono text-xs">{flow.name}</p>
+                  <p className="text-xs">{toNormalCase(flow.name)}</p>
                 </TooltipContent>
               )}
             </Tooltip>

@@ -17,6 +17,7 @@ import {
   isFlowExecutionArtifact,
 } from "@/lib/agentFlowExecutionApi";
 import type { FlowEvent } from "@/lib/flowsApi";
+import { toNormalCase } from "@/lib/utils";
 
 interface FlowExecutionToolUIProps {
   artifact?: unknown;
@@ -121,7 +122,7 @@ export function FlowExecutionToolUI({
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">
-              {validArtifact.flow_name}
+              {toNormalCase(validArtifact.flow_name)}
             </p>
             <p className="text-xs text-muted-foreground">
               {status === "running"
