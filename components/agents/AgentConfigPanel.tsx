@@ -22,6 +22,13 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getModelPresets, getGumcpServices } from "@/lib/agentsApi";
 import { flowsAPI } from "@/lib/flowsApi";
 import type { Assistant, ModelPreset } from "@/types/agents";
@@ -267,35 +274,21 @@ export function AgentConfigPanel({
               <Label htmlFor="model" className="text-sm font-medium">
                 AI Model <span className="text-destructive">*</span>
               </Label>
-              <div className="relative">
-                <select
+              <Select value={modelPreset} onValueChange={setModelPreset}>
+                <SelectTrigger
                   id="model"
-                  value={modelPreset}
-                  onChange={(e) => setModelPreset(e.target.value)}
-                  className="flex h-10 w-full cursor-pointer appearance-none rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-all focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+                  className="h-10 w-full rounded-lg border-input bg-background px-3 shadow-sm transition-all focus:ring-primary/20"
                 >
+                  <SelectValue placeholder="Select a model" />
+                </SelectTrigger>
+                <SelectContent>
                   {presets.map((preset) => (
-                    <option key={preset.name} value={preset.name}>
+                    <SelectItem key={preset.name} value={preset.name}>
                       {preset.name}
-                    </option>
+                    </SelectItem>
                   ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
-                  <svg
-                    className="size-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </div>
-              </div>
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
                 {presets.find((p) => p.name === modelPreset)?.description ||
                   "Select the AI model that powers your agent."}
@@ -312,7 +305,7 @@ export function AgentConfigPanel({
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               placeholder="You are a helpful assistant..."
-              className="flex min-h-[200px] w-full resize-y rounded-lg border border-input bg-background px-4 py-3 font-mono text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+              className="flex min-h-[200px] w-full resize-y rounded-lg border border-input bg-transparent px-4 py-3 font-mono text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-none"
             />
             <p className="text-xs text-muted-foreground">
               Define how your agent should behave and what it should do.
@@ -483,35 +476,21 @@ export function AgentConfigPanel({
             <Label htmlFor="model" className="text-sm font-medium">
               AI Model <span className="text-destructive">*</span>
             </Label>
-            <div className="relative">
-              <select
+            <Select value={modelPreset} onValueChange={setModelPreset}>
+              <SelectTrigger
                 id="model"
-                value={modelPreset}
-                onChange={(e) => setModelPreset(e.target.value)}
-                className="flex h-10 w-full cursor-pointer appearance-none rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-all focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+                className="h-10 w-full rounded-lg border-input bg-background px-3 shadow-sm transition-all focus:ring-primary/20"
               >
+                <SelectValue placeholder="Select a model" />
+              </SelectTrigger>
+              <SelectContent>
                 {presets.map((preset) => (
-                  <option key={preset.name} value={preset.name}>
+                  <SelectItem key={preset.name} value={preset.name}>
                     {preset.name}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
-                <svg
-                  className="size-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
+              </SelectContent>
+            </Select>
             <p className="text-xs text-muted-foreground">
               {presets.find((p) => p.name === modelPreset)?.description}
             </p>
@@ -528,7 +507,7 @@ export function AgentConfigPanel({
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             placeholder="You are a helpful assistant..."
-            className="flex min-h-[200px] w-full resize-y rounded-lg border border-input bg-background px-4 py-3 font-mono text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+            className="flex min-h-[200px] w-full resize-y rounded-lg border border-input bg-transparent px-4 py-3 font-mono text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus:ring-1 focus:ring-ring focus:outline-none"
           />
         </div>
 
