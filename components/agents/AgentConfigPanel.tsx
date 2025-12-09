@@ -347,8 +347,7 @@ export function AgentConfigPanel({
                         >
                           <Checkbox
                             checked={selectedFlowIds.includes(flow.id)}
-                            onCheckedChange={() => toggleFlow(flow.id)}
-                            className="mt-1"
+                            className="pointer-events-none mt-1"
                           />
                           <div className="grid gap-0.5">
                             <span className="text-sm leading-none font-medium">
@@ -391,8 +390,7 @@ export function AgentConfigPanel({
                         >
                           <Checkbox
                             checked={selectedServices.includes(service)}
-                            onCheckedChange={() => toggleService(service)}
-                            className="data-[state=checked]:border-secondary data-[state=checked]:bg-secondary"
+                            className="pointer-events-none data-[state=checked]:border-secondary data-[state=checked]:bg-secondary"
                           />
                           <span className="flex-1 text-sm leading-none font-medium capitalize">
                             {service}
@@ -551,8 +549,7 @@ export function AgentConfigPanel({
               {selectedFlowIds.length === 0 &&
                 selectedServices.length === 0 && (
                   <span className="text-sm text-muted-foreground italic">
-                    No tools selected. Add tools to give your agent
-                    capabilities.
+                    No tools selected.
                   </span>
                 )}
             </div>
@@ -591,19 +588,13 @@ export function AgentConfigPanel({
                           onClick={() => toggleFlow(flow.id)}
                         >
                           <Checkbox
-                            id={`flow-select-${flow.id}`}
                             checked={selectedFlowIds.includes(flow.id)}
-                            onCheckedChange={() => toggleFlow(flow.id)}
-                            className="mt-1 rounded-sm border-border/60 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+                            className="pointer-events-none mt-1 rounded-sm border-border/60 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
                           />
                           <div className="grid gap-1">
-                            <label
-                              htmlFor={`flow-select-${flow.id}`}
-                              className="cursor-pointer text-sm leading-none font-medium tracking-tight text-foreground/90"
-                              onClick={(e) => e.stopPropagation()}
-                            >
+                            <span className="text-sm leading-none font-medium tracking-tight text-foreground/90">
                               {flow.name}
-                            </label>
+                            </span>
                             <p className="line-clamp-2 text-xs text-muted-foreground">
                               {flow.description}
                             </p>
@@ -656,18 +647,12 @@ export function AgentConfigPanel({
                           onClick={() => toggleService(service)}
                         >
                           <Checkbox
-                            id={`service-select-${service}`}
                             checked={selectedServices.includes(service)}
-                            onCheckedChange={() => toggleService(service)}
-                            className="rounded-sm border-border/60 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+                            className="pointer-events-none rounded-sm border-border/60 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
                           />
-                          <label
-                            htmlFor={`service-select-${service}`}
-                            className="flex-1 cursor-pointer text-sm leading-none font-medium tracking-tight text-foreground/90 capitalize"
-                            onClick={(e) => e.stopPropagation()}
-                          >
+                          <span className="flex-1 text-sm leading-none font-medium tracking-tight text-foreground/90 capitalize">
                             {service}
-                          </label>
+                          </span>
                         </div>
                       ))
                     )}
