@@ -4,7 +4,7 @@ import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
 import {
   CheckIcon,
   Sparkles,
-  Loader2,
+  RefreshCwIcon,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -59,55 +59,74 @@ export const FlowCompilerToolUI: ToolCallMessagePartComponent<
       const response = await activateFlow(flow_id);
       if (response.success) {
         setIsActivated(true);
-        // Navigate to the flow page after a short delay
-        setTimeout(() => {
-          router.push(`/flow/${flow_id}`);
-        }, 500);
+        // Navigate immediately after setting activated state
+        router.push(`/flow/${flow_id}`);
       }
     } catch (error) {
       console.error("Failed to activate flow:", error);
-    } finally {
       setIsActivating(false);
     }
   };
 
   return (
-    <div className="mb-4 flex w-full flex-col gap-4 rounded-lg border border-border bg-muted/30 py-4">
+    <div className="mb-4 flex w-full flex-col gap-4 rounded-xl border border-border bg-card py-5 shadow-sm">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4">
-        <Sparkles className="size-5 text-primary" />
+      <div className="flex items-center gap-3 px-5">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Sparkles className="size-4" />
+        </div>
         <p className="text-base font-semibold">Flow Ready</p>
       </div>
 
       {/* Flow Info */}
-      <div className="flex flex-col gap-2 border-t border-border/50 px-4 pt-4">
+      <div className="flex flex-col gap-3 border-t border-border/50 px-5 pt-4">
         <div className="flex flex-col gap-1">
-          <p className="text-sm text-muted-foreground">Name</p>
+          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Name
+          </p>
           <p className="font-medium text-foreground">{flow_name}</p>
         </div>
 
         <div className="flex flex-col gap-1">
-          <p className="text-sm text-muted-foreground">Description</p>
-          <p className="text-sm text-foreground">{flow_description}</p>
+          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Description
+          </p>
+          <p className="text-sm leading-relaxed text-foreground">
+            {flow_description}
+          </p>
         </div>
       </div>
 
       {/* Explanation */}
       {flow_explanation && (
-        <div className="flex flex-col border-t border-border/50 px-4 pt-4">
+        <div className="flex flex-col border-t border-border/50 px-5 pt-4">
           <button
-            onClick={() => setIsExplanationOpen(!isExplanationOpen)}
-            className="flex w-full items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            onClick={() => {
+              if (!isExplanationOpen) {
+                setIsExplanationOpen(true);
+                // Scroll the button into view when expanding
+                setTimeout(() => {
+                  const button = document.activeElement as HTMLElement;
+                  button?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                  });
+                }, 50);
+              } else {
+                setIsExplanationOpen(false);
+              }
+            }}
+            className="group flex w-full cursor-pointer items-center justify-between rounded-lg border border-border/40 bg-card px-4 py-2.5 text-sm font-medium text-foreground/70 shadow-sm transition-all duration-150 hover:border-border hover:bg-muted/30 hover:text-foreground hover:shadow"
           >
+            <span>How it works</span>
             {isExplanationOpen ? (
-              <ChevronDown className="size-4" />
+              <ChevronDown className="size-4 transition-transform duration-150" />
             ) : (
-              <ChevronRight className="size-4" />
+              <ChevronRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5" />
             )}
-            How it works
           </button>
           {isExplanationOpen && (
-            <div className="mt-2">
+            <div className="mt-3 px-1">
               <FlowExplanation explanation={flow_explanation} />
             </div>
           )}
@@ -115,15 +134,16 @@ export const FlowCompilerToolUI: ToolCallMessagePartComponent<
       )}
 
       {/* Create Flow Button */}
-      <div className="flex justify-end border-t border-border/50 px-4 pt-4">
+      <div className="flex justify-end border-t border-border/50 px-5 pt-4">
         <Button
           onClick={handleCreateFlow}
           disabled={isActivating || isActivated}
-          className="gap-2"
+          className="gap-2 shadow-sm"
+          size="lg"
         >
           {isActivating ? (
             <>
-              <Loader2 className="size-4 animate-spin" />
+              <RefreshCwIcon className="size-4 animate-spin" />
               Creating...
             </>
           ) : isActivated ? (

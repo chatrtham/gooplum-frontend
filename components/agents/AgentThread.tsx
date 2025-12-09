@@ -27,21 +27,20 @@ import {
   UserMessageAttachments,
 } from "@/components/assistant-ui/attachment";
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
-import { ToolFallback } from "@/components/assistant-ui/tool-fallback";
 import { AskUserToolUI } from "@/components/assistant-ui/ask-user-tool-ui";
-import { FlowCompilerToolUI } from "@/components/assistant-ui/flow-compiler-tool-ui";
+import { AgentToolFallback } from "@/components/assistant-ui/agent-tool-fallback";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
 import { AskUserInterrupt } from "@/components/AskUserInterrupt";
 import { useLangGraphInterruptState } from "@assistant-ui/react-langgraph";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const Thread: FC = () => {
+export const AgentThread: FC = () => {
   return (
     <ThreadPrimitive.Root
-      className="aui-root aui-thread-root @container flex h-full flex-col bg-background"
+      className="aui-root aui-thread-root @container flex h-full flex-col bg-transparent"
       style={{
-        ["--thread-max-width" as string]: "56rem",
+        ["--thread-max-width" as string]: "44rem",
       }}
     >
       <ThreadPrimitive.Viewport className="aui-thread-viewport relative flex flex-1 flex-col overflow-x-auto overflow-y-auto px-4">
@@ -87,16 +86,14 @@ const ThreadWelcome: FC = () => {
       <div className="aui-thread-welcome-root mx-auto my-auto flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col">
         <div className="aui-thread-welcome-center flex w-full flex-grow flex-col items-center justify-center">
           <div className="aui-thread-welcome-message flex size-full flex-col items-center justify-center px-8 text-center">
-            <div className="mb-6 flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-primary/20 to-secondary/20 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10">
-              <BotIcon className="size-10 text-primary" />
+            <div className="mb-6 flex size-20 items-center justify-center rounded-3xl border border-border/50 bg-card text-primary shadow-sm">
+              <BotIcon className="size-10" />
             </div>
-            <div className="aui-thread-welcome-message-motion-1 mb-3 text-3xl font-bold tracking-tight text-foreground">
-              Hi, I'm Goopie!
+            <div className="aui-thread-welcome-message-motion-1 mb-3 text-2xl font-semibold tracking-tight text-foreground">
+              Start a new conversation
             </div>
-            <div className="aui-thread-welcome-message-motion-2 max-w-md text-lg leading-relaxed text-muted-foreground">
-              I can help you build flows.
-              <br />
-              Just tell me what you want to automate!
+            <div className="aui-thread-welcome-message-motion-2 max-w-md leading-relaxed text-muted-foreground">
+              Send a message to start interacting with this agent.
             </div>
           </div>
         </div>
@@ -107,13 +104,13 @@ const ThreadWelcome: FC = () => {
 
 const Composer: FC = () => {
   return (
-    <div className="aui-composer-wrapper sticky bottom-0 mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 overflow-visible bg-background px-4 pb-6 md:pb-8">
+    <div className="aui-composer-wrapper sticky bottom-0 mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 overflow-visible px-2 pb-4 md:pb-6">
       <ThreadScrollToBottom />
-      <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col rounded-3xl border border-input bg-background px-4 pt-3 shadow-xl shadow-black/5 ring-offset-background transition-all focus-within:border-primary/50">
+      <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col rounded-2xl border border-border bg-card px-2 pt-2 shadow-lg ring-offset-background transition-all focus-within:border-primary/50">
         <ComposerAttachments />
         <ComposerPrimitive.Input
           placeholder="Type a message..."
-          className="aui-composer-input mb-1 max-h-32 min-h-12 w-full resize-none bg-transparent px-2 pt-2 pb-2 text-base outline-none placeholder:text-muted-foreground"
+          className="aui-composer-input mb-1 max-h-32 min-h-12 w-full resize-none bg-transparent px-3.5 pt-2.5 pb-3 text-base outline-none placeholder:text-muted-foreground"
           rows={1}
           autoFocus
           aria-label="Message input"
@@ -184,10 +181,9 @@ const AssistantMessage: FC = () => {
             components={{
               Text: MarkdownText,
               tools: {
-                Fallback: ToolFallback,
+                Fallback: AgentToolFallback,
                 by_name: {
                   ask_user: AskUserToolUI,
-                  flow_compiler: FlowCompilerToolUI,
                 },
               },
             }}
@@ -205,7 +201,6 @@ const AssistantMessage: FC = () => {
 };
 
 const AssistantActionBar: FC = () => {
-  // Hide action bar buttons ONLY on the last message when there's an active interrupt
   const interrupt = useLangGraphInterruptState();
   const isLast = useAssistantState(({ message }) => message.isLast);
   const shouldHideButtons = isLast && !!interrupt?.value;
@@ -217,7 +212,6 @@ const AssistantActionBar: FC = () => {
       autohideFloat="single-branch"
       className="aui-assistant-action-bar-root col-start-3 row-start-2 -ml-1 flex gap-1 text-muted-foreground data-floating:absolute data-floating:rounded-md data-floating:border data-floating:bg-background data-floating:p-1 data-floating:shadow-sm"
     >
-      {/* Show buttons unless this is the last message AND there's an active interrupt */}
       {!shouldHideButtons && (
         <>
           <ActionBarPrimitive.Copy asChild>

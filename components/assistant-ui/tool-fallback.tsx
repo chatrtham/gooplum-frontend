@@ -1,46 +1,25 @@
 import type { ToolCallMessagePartComponent } from "@assistant-ui/react";
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { CheckIcon, RefreshCwIcon } from "lucide-react";
 
 export const ToolFallback: ToolCallMessagePartComponent = ({
   toolName,
-  argsText,
   result,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const isLoading = result === undefined;
+
   return (
-    <div className="aui-tool-fallback-root mb-4 flex w-full flex-col gap-3 rounded-lg border py-3">
-      <div className="aui-tool-fallback-header flex items-center gap-2 px-4">
-        <CheckIcon className="aui-tool-fallback-icon size-4" />
-        <p className="aui-tool-fallback-title flex-grow">
-          Used tool: <b>{toolName}</b>
-        </p>
-        <Button onClick={() => setIsCollapsed(!isCollapsed)}>
-          {isCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />}
-        </Button>
+    <div className="aui-tool-fallback-root mb-3 flex items-center gap-3 rounded-xl border border-border/40 bg-muted/20 px-4 py-3 transition-all duration-150">
+      <div className="flex size-5 items-center justify-center rounded-full bg-background">
+        {isLoading ? (
+          <RefreshCwIcon className="aui-tool-fallback-loading size-3.5 animate-spin text-muted-foreground" />
+        ) : (
+          <CheckIcon className="aui-tool-fallback-success size-3.5 text-secondary" />
+        )}
       </div>
-      {!isCollapsed && (
-        <div className="aui-tool-fallback-content flex flex-col gap-2 border-t pt-2">
-          <div className="aui-tool-fallback-args-root px-4">
-            <pre className="aui-tool-fallback-args-value whitespace-pre-wrap">
-              {argsText}
-            </pre>
-          </div>
-          {result !== undefined && (
-            <div className="aui-tool-fallback-result-root border-t border-dashed px-4 pt-2">
-              <p className="aui-tool-fallback-result-header font-semibold">
-                Result:
-              </p>
-              <pre className="aui-tool-fallback-result-content whitespace-pre-wrap">
-                {typeof result === "string"
-                  ? result
-                  : JSON.stringify(result, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      )}
+      <p className="aui-tool-fallback-title text-sm text-foreground/80">
+        {isLoading ? "Using" : "Used"}{" "}
+        <span className="font-medium text-foreground">{toolName}</span>
+      </p>
     </div>
   );
 };
