@@ -106,7 +106,7 @@ const Composer: FC = () => {
   return (
     <div className="aui-composer-wrapper sticky bottom-0 mx-auto flex w-full max-w-[var(--thread-max-width)] flex-col gap-4 overflow-visible px-2 pb-4 md:pb-6">
       <ThreadScrollToBottom />
-      <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col rounded-2xl border border-border bg-card px-2 pt-2 shadow-lg ring-offset-background transition-all focus-within:ring-2 focus-within:ring-primary/20 focus-within:ring-offset-2">
+      <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col rounded-2xl border border-border bg-card px-2 pt-2 shadow-lg ring-offset-background transition-all focus-within:border-primary/50">
         <ComposerAttachments />
         <ComposerPrimitive.Input
           placeholder="Type a message..."
