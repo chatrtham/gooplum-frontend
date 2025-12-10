@@ -147,12 +147,6 @@ export function FlowsListPage() {
         {/* Sentinel for infinite scroll */}
         <div ref={observerTarget} className="h-4 w-full" />
 
-        {!loading && flows.length > 0 && flows.length >= total ? (
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            All flows loaded ({total})
-          </div>
-        ) : null}
-
         {!loading && !error && flows.length === 0 ? (
           <div className="animate-in fade-in-50 flex flex-col items-center justify-center rounded-2xl border border-dashed p-12 text-center">
             <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
