@@ -141,17 +141,22 @@ export function getThreadPreview(
 /**
  * Send a message to an assistant and stream the response
  * Uses the assistantId directly - LangGraph will load the assistant's config
+ *
+ * @param configurable - Optional config override. When provided, this overrides the
+ *   stored assistant config, ensuring the run uses the latest configuration even
+ *   if the assistant was updated after the thread was created.
  */
 export async function sendAssistantMessage(params: {
   threadId: string;
   assistantId: string;
   messages?: LangChainMessage[];
   command?: LangGraphCommand;
+  configurable?: Record<string, unknown>;
 }) {
   const client = createClient();
 
-  // Use assistantId directly - no need to pass agent_id in config
-  // LangGraph will look up the assistant and use its stored config
+  // Pass config override if provided - this ensures existing threads use the
+  // latest assistant configuration instead of the version from when the thread started
   return client.runs.stream(params.threadId, params.assistantId, {
     input: params.messages?.length
       ? {
@@ -160,5 +165,8 @@ export async function sendAssistantMessage(params: {
       : null,
     command: params.command,
     streamMode: ["messages", "updates"],
+    ...(params.configurable && {
+      config: { configurable: params.configurable },
+    }),
   });
 }

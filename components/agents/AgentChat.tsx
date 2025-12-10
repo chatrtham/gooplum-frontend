@@ -10,12 +10,15 @@ import {
 } from "@/lib/agentChatApi";
 import { AgentThread } from "@/components/agents/AgentThread";
 import type { LangChainMessage } from "@assistant-ui/react-langgraph";
+import type { AssistantConfigurable } from "@/types/agents";
 
 interface AgentChatProps {
   assistantId: string;
   threadId?: string;
   /** Initial messages to display (from thread search, avoids extra /state call) */
   initialMessages?: LangChainMessage[];
+  /** Current assistant configuration - passed on each run to override cached version */
+  configurable?: AssistantConfigurable;
   /** Called when a new thread is created, with thread ID and first message preview */
   onThreadCreated?: (threadId: string, firstMessagePreview: string) => void;
   /** Called when streaming completes (good time to refresh thread list) */
@@ -26,6 +29,7 @@ export function AgentChat({
   assistantId,
   threadId: initialThreadId,
   initialMessages = [],
+  configurable,
   onThreadCreated,
   onStreamingComplete,
 }: AgentChatProps) {
@@ -130,6 +134,7 @@ export function AgentChat({
         assistantId,
         messages,
         command,
+        configurable: configurable as Record<string, unknown> | undefined,
       });
       // Wrap to detect completion
       return wrapStreamWithCompletion(stream);

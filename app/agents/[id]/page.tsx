@@ -333,6 +333,7 @@ export default function AgentDetailPage() {
                 assistantId={assistantId}
                 threadId={currentThreadId}
                 initialMessages={initialMessages}
+                configurable={assistant?.config.configurable}
                 onThreadCreated={handleThreadCreated}
                 onStreamingComplete={handleStreamingComplete}
               />
