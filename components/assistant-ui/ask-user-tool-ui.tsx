@@ -37,8 +37,10 @@ export const AskUserToolUI: ToolCallMessagePartComponent<
   const questions = args?.questions ?? [];
 
   // Parse the result string - format is "1. answer1\n\n2. answer2\n\n3. answer3"
+  // We use a regex lookahead to split only when followed by a number and a dot,
+  // to avoid splitting on double newlines within an answer.
   const answers = result
-    .split("\n\n")
+    .split(/\n\n(?=\d+\.\s)/)
     .map((line: string) => line.replace(/^\d+\.\s*/, "").trim())
     .filter(Boolean);
 
@@ -74,7 +76,7 @@ export const AskUserToolUI: ToolCallMessagePartComponent<
               />
             </div>
             {answers[idx] && (
-              <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2 font-mono text-sm text-foreground/90">
+              <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2 font-mono text-sm whitespace-pre-wrap text-foreground/90">
                 {answers[idx].replace(/\\n/g, "\n")}
               </div>
             )}
