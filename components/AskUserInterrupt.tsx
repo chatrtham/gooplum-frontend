@@ -134,7 +134,7 @@ export const AskUserInterrupt = () => {
                     handleSubmit();
                   }
                 }}
-                placeholder="Type your answer... (Shift+Enter for new line)"
+                placeholder="Type your answer..."
                 rows={1}
                 className="min-h-[40px] resize-none rounded-md border-input bg-background/50 px-3 py-2 font-mono text-sm shadow-sm transition-all focus-visible:ring-1 focus-visible:ring-primary"
               />
