@@ -13,8 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { RefreshCw } from "lucide-react";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 
@@ -121,14 +120,23 @@ export const AskUserInterrupt = () => {
               )}
 
               {/* Always show text input for custom answers */}
-              <Input
+              <Textarea
                 value={answers[idx] || ""}
                 disabled={isSubmitting}
-                onChange={(e) =>
-                  setAnswers((prev) => ({ ...prev, [idx]: e.target.value }))
-                }
-                placeholder="Type your answer..."
-                className="h-10 rounded-md border-input bg-background/50 px-3 font-mono text-sm shadow-sm transition-all focus-visible:ring-1 focus-visible:ring-primary"
+                onChange={(e) => {
+                  setAnswers((prev) => ({ ...prev, [idx]: e.target.value }));
+                  e.target.style.height = "auto";
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                placeholder="Type your answer... (Shift+Enter for new line)"
+                rows={1}
+                className="min-h-[40px] resize-none rounded-md border-input bg-background/50 px-3 py-2 font-mono text-sm shadow-sm transition-all focus-visible:ring-1 focus-visible:ring-primary"
               />
             </div>
           ))}
