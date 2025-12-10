@@ -44,9 +44,7 @@ export function RunDetails({ run, onBack }: RunDetailsProps) {
           <ArrowLeftIcon className="size-4" />
         </Button>
         <div>
-          <h2 className="text-lg leading-none font-semibold">
-            Activity Details
-          </h2>
+          <h2 className="text-lg leading-none font-semibold">Run Details</h2>
         </div>
         <div className="ml-auto">
           {isSuccess ? (
@@ -153,7 +151,7 @@ export function RunDetails({ run, onBack }: RunDetailsProps) {
                     <p className="text-xs font-normal tracking-wider text-muted-foreground uppercase">
                       {key}
                     </p>
-                    <div className="rounded-md border border-border/40 bg-background/40 px-3 py-2 font-mono text-sm break-words text-foreground shadow-sm">
+                    <div className="rounded-md border border-border/40 bg-background/40 px-3 py-2 font-mono text-sm break-all whitespace-pre-wrap text-foreground shadow-sm">
                       {typeof value === "object"
                         ? JSON.stringify(value)
                         : String(value)}
@@ -169,7 +167,7 @@ export function RunDetails({ run, onBack }: RunDetailsProps) {
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <ActivityIcon className="size-4" />
-            <span>Activities</span>
+            <span>Activity</span>
           </div>
 
           {!run.stream_events || run.stream_events.length === 0 ? (

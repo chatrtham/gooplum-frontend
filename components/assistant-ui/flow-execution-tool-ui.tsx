@@ -3,21 +3,22 @@
 import { useState, useEffect, useRef } from "react";
 import {
   RefreshCwIcon,
-  CheckCircle2,
-  XCircle,
+  CheckCircleIcon,
+  XCircleIcon,
   PlayIcon,
   ChevronDown,
   ChevronRight,
-  TerminalSquare,
+  ActivityIcon,
+  ClipboardListIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   executeFlowFromArtifact,
-  FlowExecutionRequestArtifact,
   isFlowExecutionArtifact,
+  getFlowRunStatus,
 } from "@/lib/agentFlowExecutionApi";
 import type { FlowEvent } from "@/lib/flowsApi";
-import { toNormalCase } from "@/lib/utils";
+import { toNormalCase, cn } from "@/lib/utils";
 
 interface FlowExecutionToolUIProps {
   artifact?: unknown;
@@ -33,9 +34,15 @@ export function FlowExecutionToolUI({
   result,
 }: FlowExecutionToolUIProps) {
   const [status, setStatus] = useState<
-    "idle" | "running" | "completed" | "failed"
-  >("idle");
-  const [logs, setLogs] = useState<string[]>([]);
+    "loading" | "idle" | "running" | "completed" | "failed"
+  >("loading");
+  const [logs, setLogs] = useState<
+    {
+      message: string;
+      timestamp: string;
+      status?: "success" | "failed" | "running";
+    }[]
+  >([]);
   const [executionResult, setExecutionResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -63,181 +70,271 @@ export function FlowExecutionToolUI({
 
     await executeFlowFromArtifact(validArtifact, (event: FlowEvent) => {
       if (event.type === "stream") {
-        setLogs((prev) => [...prev, event.message]);
+        setLogs((prev) => [
+          ...prev,
+          {
+            message: event.message,
+            timestamp: new Date(event.timestamp).toISOString(),
+            status: event.status,
+          },
+        ]);
       } else if (event.type === "complete") {
         if (event.success) {
           setStatus("completed");
           setExecutionResult(event.data);
-          setLogs((prev) => [...prev, "Execution completed successfully."]);
+          setLogs((prev) => [
+            ...prev,
+            {
+              message: "Flow completed successfully.",
+              timestamp: new Date().toISOString(),
+              status: "success",
+            },
+          ]);
         } else {
           setStatus("failed");
           setError(event.error || "Unknown error");
           setLogs((prev) => [
             ...prev,
-            `Error: ${event.error || "Unknown error"}`,
+            {
+              message: `Error: ${event.error || "Unknown error"}`,
+              timestamp: new Date().toISOString(),
+              status: "failed",
+            },
           ]);
         }
       }
     });
   };
 
-  // Auto-start execution when component mounts
+  // Auto-start execution or check status on mount
   useEffect(() => {
-    if (status === "idle" && !hasStartedRef.current && validArtifact) {
+    if (status !== "loading" || hasStartedRef.current || !validArtifact) return;
+
+    const checkAndStart = async () => {
       hasStartedRef.current = true;
-      startExecution();
-    }
-  }, [validArtifact]);
+
+      try {
+        // Check if run already exists
+        const runStatus = await getFlowRunStatus(validArtifact.run_id);
+
+        if (runStatus.status === "COMPLETED") {
+          setStatus("completed");
+          setExecutionResult(runStatus.result);
+          // Keep collapsed by default for completed runs
+        } else if (runStatus.status === "FAILED") {
+          setStatus("failed");
+          setError(runStatus.error || "Flow execution failed");
+          setIsExpanded(true); // Expand for errors
+        } else {
+          // If RUNNING or PENDING, show running state
+          setStatus("running");
+          setIsExpanded(true);
+        }
+      } catch (e) {
+        // Run not found (404) or other error -> Start new execution
+        startExecution();
+      }
+    };
+
+    checkAndStart();
+  }, [validArtifact, status]);
 
   // Return null if not a valid artifact
   if (!validArtifact) {
     return null;
   }
 
+  // Helper to get summary text
+  const getSummary = () => {
+    if (!executionResult) return null;
+    if (
+      typeof executionResult === "object" &&
+      executionResult !== null &&
+      "summary" in executionResult
+    ) {
+      return executionResult.summary;
+    }
+    return null;
+  };
+
+  // Check if inner status indicates success
+  const isFlowSuccessful = () => {
+    if (!executionResult) return status === "completed";
+    const hasInnerStatus =
+      typeof executionResult === "object" &&
+      executionResult !== null &&
+      "status" in executionResult;
+    return !hasInnerStatus || executionResult.status === "success";
+  };
+
+  const isFinished = status === "completed" || status === "failed";
+
   return (
-    <div className="mb-4 flex w-full flex-col gap-4 rounded-xl border border-border bg-card py-5 shadow-sm">
+    <div className="mb-4 flex w-full flex-col rounded-xl border border-border/60 bg-card/50 shadow-sm backdrop-blur-md transition-all duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between px-5">
+      <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3">
           <div
-            className={`flex size-8 items-center justify-center rounded-lg transition-colors ${
-              status === "running"
+            className={cn(
+              "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+              status === "loading" || status === "running"
                 ? "bg-primary/10 text-primary"
-                : status === "completed"
-                  ? "bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400"
-                  : status === "failed"
+                : status === "completed" && isFlowSuccessful()
+                  ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                  : status === "completed" && !isFlowSuccessful()
                     ? "bg-destructive/10 text-destructive"
-                    : "bg-muted text-muted-foreground"
-            }`}
+                    : status === "failed"
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-muted text-muted-foreground",
+            )}
           >
-            {status === "running" ? (
+            {status === "loading" || status === "running" ? (
               <RefreshCwIcon className="size-4 animate-spin" />
-            ) : status === "completed" ? (
-              <CheckCircle2 className="size-4" />
-            ) : status === "failed" ? (
-              <XCircle className="size-4" />
+            ) : status === "completed" && isFlowSuccessful() ? (
+              <CheckCircleIcon className="size-4" />
+            ) : status === "completed" || status === "failed" ? (
+              <XCircleIcon className="size-4" />
             ) : (
               <PlayIcon className="size-4" />
             )}
           </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium tracking-tight text-foreground">
               {toNormalCase(validArtifact.flow_name)}
             </p>
-            <p className="text-xs text-muted-foreground">
-              {status === "running"
-                ? "Working on it..."
-                : status === "completed"
-                  ? "Done"
-                  : status === "failed"
-                    ? "Something went wrong"
-                    : "Ready"}
-            </p>
+            {/* Show summary inline for finished states */}
+            {isFinished ? (
+              <p className="text-xs text-muted-foreground">
+                {getSummary() ||
+                  (status === "completed" && isFlowSuccessful()
+                    ? "Completed successfully"
+                    : status === "completed" && !isFlowSuccessful()
+                      ? "Flow returned an error"
+                      : error || "Execution failed")}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {status === "loading"
+                  ? "Loading..."
+                  : status === "running"
+                    ? "Running..."
+                    : "Ready to start"}
+              </p>
+            )}
           </div>
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-        >
-          {isExpanded ? (
-            <ChevronDown className="size-4" />
-          ) : (
-            <ChevronRight className="size-4" />
-          )}
-        </Button>
+        {/* Only show expand button when running */}
+        {status === "running" && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="h-8 w-8 shrink-0 p-0 text-muted-foreground hover:text-foreground"
+          >
+            {isExpanded ? (
+              <ChevronDown className="size-4" />
+            ) : (
+              <ChevronRight className="size-4" />
+            )}
+          </Button>
+        )}
+
+        {/* Retry button for failed state */}
+        {status === "failed" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={startExecution}
+            className="shrink-0 text-xs"
+          >
+            Retry
+          </Button>
+        )}
       </div>
 
-      {/* Parameters Preview (Collapsed) */}
-      {!isExpanded && (
-        <div className="px-5 text-xs text-muted-foreground">
-          {Object.keys(validArtifact.parameters).length} parameters set
-        </div>
-      )}
-
-      {/* Expanded Details */}
-      {isExpanded && (
-        <div className="space-y-5 border-t border-border/50 px-5 pt-4">
+      {/* Expanded Details - Only show when running and expanded */}
+      {status === "running" && isExpanded && (
+        <div className="animate-in fade-in slide-in-from-top-2 space-y-5 border-t border-border/50 px-5 py-5">
           {/* Parameters */}
-          <div className="space-y-2">
-            <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Parameters
-            </p>
-            <div className="rounded-lg border border-border bg-muted/30 p-3 font-mono text-xs text-foreground">
-              <pre className="overflow-x-auto whitespace-pre-wrap">
-                {JSON.stringify(validArtifact.parameters, null, 2)}
-              </pre>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <ClipboardListIcon className="size-3.5 text-muted-foreground" />
+              <p className="text-xs font-normal tracking-wider text-muted-foreground uppercase">
+                Inputs
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-card/50 p-4 shadow-sm backdrop-blur-md">
+              <div className="grid gap-4">
+                {Object.entries(validArtifact.parameters).map(
+                  ([key, value]) => (
+                    <div key={key} className="space-y-1.5">
+                      <p className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
+                        {toNormalCase(key)}
+                      </p>
+                      <div className="rounded-md border border-border/40 bg-background/40 px-3 py-2 font-mono text-xs break-all whitespace-pre-wrap text-foreground shadow-sm">
+                        {typeof value === "object"
+                          ? JSON.stringify(value, null, 2)
+                          : String(value)}
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Logs */}
-          <div className="space-y-2">
+          {/* Live Activity */}
+          <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <TerminalSquare className="size-3 text-muted-foreground" />
-              <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                Activity Log
+              <ActivityIcon className="size-3.5 text-muted-foreground" />
+              <p className="text-xs font-normal tracking-wider text-muted-foreground uppercase">
+                Live Activity
               </p>
             </div>
-            <div className="max-h-[200px] overflow-y-auto rounded-lg border border-border bg-muted p-3 font-mono text-xs text-foreground">
+            <div className="max-h-[300px] space-y-2 overflow-y-auto pr-1">
               {logs.length === 0 ? (
-                <span className="text-muted-foreground">
-                  Waiting for activity...
-                </span>
+                <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+                  <div className="flex items-center justify-center gap-2">
+                    <RefreshCwIcon className="size-3 animate-spin" />
+                    <span>Starting execution...</span>
+                  </div>
+                </div>
               ) : (
                 logs.map((log, i) => (
                   <div
                     key={i}
-                    className="border-l-2 border-transparent pl-2 break-words whitespace-pre-wrap hover:border-primary/20"
+                    className="animate-in fade-in slide-in-from-bottom-2 flex gap-3 rounded-xl border border-border/60 bg-card/50 p-3 shadow-xs backdrop-blur-md transition-all hover:shadow-sm"
                   >
-                    <span className="mr-2 text-muted-foreground select-none">
-                      {new Date().toLocaleTimeString([], {
-                        hour12: false,
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      })}
-                    </span>
-                    {log}
+                    <div className="mt-0.5 shrink-0">
+                      {log.status === "success" ? (
+                        <div className="flex size-6 items-center justify-center rounded-full bg-green-500/10 text-green-600">
+                          <CheckCircleIcon className="size-3.5" />
+                        </div>
+                      ) : log.status === "failed" ? (
+                        <div className="flex size-6 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                          <XCircleIcon className="size-3.5" />
+                        </div>
+                      ) : (
+                        <div className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+                          <RefreshCwIcon className="size-3.5 animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-normal break-words text-foreground">
+                        {log.message}
+                      </p>
+                      <p className="mt-1 font-mono text-xs text-muted-foreground tabular-nums">
+                        {new Date(log.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
                   </div>
                 ))
               )}
               <div ref={logsEndRef} />
             </div>
           </div>
-
-          {/* Result */}
-          {status === "completed" && executionResult && (
-            <div className="space-y-2">
-              <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                Output
-              </p>
-              <div className="rounded-lg border border-green-500/20 bg-green-500/5 p-3 text-xs">
-                <pre className="overflow-x-auto whitespace-pre-wrap text-green-700 dark:text-green-400">
-                  {typeof executionResult === "object"
-                    ? JSON.stringify(executionResult, null, 2)
-                    : String(executionResult)}
-                </pre>
-              </div>
-            </div>
-          )}
-
-          {/* Error */}
-          {status === "failed" && error && (
-            <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive">
-              <p className="mb-1 font-medium">What went wrong:</p>
-              <p className="font-mono">{error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={startExecution}
-                className="mt-3 h-7 border-destructive/20 text-xs hover:bg-destructive/10 hover:text-destructive"
-              >
-                Try Again
-              </Button>
-            </div>
-          )}
         </div>
       )}
     </div>
